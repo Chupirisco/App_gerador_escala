@@ -1,0 +1,159 @@
+from collections import defaultdict
+from typing import Dict, List, Any, Tuple
+
+
+def slot_period(hora: str) -> str:
+    """
+    Retorna o período (manhã, tarde ou noite) com base na hora informada (formato HH:MM).
+    """
+    hh = int(hora.split(":")[0])
+    if hh <= 11:
+        return "manha"
+    if 12 <= hh <= 17:
+        return "tarde"
+    return "noite"
+
+
+def day_in_range_str(day_str: str, entry: str) -> bool:
+    """
+    Verifica se um dia está dentro de um intervalo de indisponibilidade.
+    Exemplo: day_str='5', entry='3-8' → True.
+    """
+    if isinstance(entry, str) and "-" in entry:
+        s, e = entry.split("-")
+        return int(s) <= int(day_str) <= int(e)
+    else:
+        return str(entry).zfill(2) == str(day_str).zfill(2)
+
+
+def is_available(ind: Dict[str, Any], day: str, period: str) -> bool:
+    """
+    Retorna True se o indivíduo está disponível no dia e período especificado.
+
+    Regras:
+    - Se não existir 'indisponibilidade', assume disponível todos os dias.
+    - Se 'dias' == [] → indisponível todos os dias.
+    - Caso existam dias listados, bloqueia apenas os que estiverem neles.
+    - Considera também bloqueios específicos por período (manhã/tarde/noite).
+    """
+    indis = ind.get("indisponibilidade", {})
+
+    dias = indis.get("dias", None)
+    if dias == []:
+        return False
+
+    if dias:
+        for entry in dias:
+            if day_in_range_str(day, entry):
+                return False
+
+    periodos = indis.get("periodos", {})
+    if periodos:
+        bloqueados = periodos.get(period, [])
+        for entry in bloqueados:
+            if day_in_range_str(day, entry):
+                return False
+
+    return True
+
+
+def can_perform(ind: Dict[str, Any], func: str) -> bool:
+    """
+    Retorna True se o indivíduo pode exercer a função especificada.
+
+    - 'tudo' ou ['tudo']: pode todas as funções.
+    - Lista de funções: representa funções proibidas (não permitidas).
+    """
+    f = ind.get("funcoes")
+    if f == "tudo" or f == ["tudo"]:
+        return True
+    if isinstance(f, list):
+        return func not in f
+    return True
+
+
+def generate_schedule(data: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+    """
+    Gera a escala mensal com base nos plantões e indisponibilidades.
+    Retorna:
+      - assignments: lista com os plantões e respectivos nomes.
+      - counts: contagem de quantas vezes cada pessoa foi escalada.
+    """
+    plantoes = data["plantoes"]
+    individuos = data["individuos"]
+
+    counts = defaultdict(int)            # Contador de escalas por pessoa
+    assigned_days = defaultdict(set)     # Dias já atribuídos por pessoa
+    assignments: List[Dict[str, Any]] = []  # Resultado final
+
+    pl_sorted = sorted(plantoes, key=lambda p: (int(p["data"]), p["hora"]))
+
+    for p in pl_sorted:
+        day = p["data"].zfill(2)
+        period = slot_period(p["hora"])
+        pa = {"local": p["local"], "data": day, "hora": p["hora"], "vagas": []}
+
+        # Monta lista de funções a preencher
+        funcs: List[str] = []
+        for func, qty in p["funcoes"].items():
+            funcs += [func] * int(qty)
+
+        # Seleciona candidatos para cada função
+        for func in funcs:
+            candidates = []
+
+            for name, ind in individuos.items():
+                if not is_available(ind, day, period):
+                    continue
+                if not can_perform(ind, func):
+                    continue
+
+                # Já escalado nesse mesmo horário?
+                already_booked = any(
+                    v.get("nome") == name
+                    for a in assignments
+                    if a["data"] == day and a["hora"] == p["hora"]
+                    for v in a["vagas"]
+                )
+                if already_booked:
+                    continue
+
+                # Evita dias consecutivos
+                prev_day = str(int(day) - 1).zfill(2)
+                next_day = str(int(day) + 1).zfill(2)
+                avoids = (
+                    prev_day in assigned_days.get(name, set())
+                    or next_day in assigned_days.get(name, set())
+                )
+
+                candidates.append((name, avoids, counts[name]))
+
+            # Seleciona candidato ideal
+            if not candidates:
+                pa["vagas"].append({"func": func, "nome": None})
+            else:
+                candidates_sorted = sorted(candidates, key=lambda x: (x[1], x[2], x[0]))
+                chosen = candidates_sorted[0][0]
+                pa["vagas"].append({"func": func, "nome": chosen})
+                counts[chosen] += 1
+                assigned_days[chosen].add(day)
+
+        assignments.append(pa)
+
+    return assignments, counts
+
+
+def gerar_escala(dados: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        if "plantoes" not in dados or "individuos" not in dados:
+            raise ValueError("JSON deve conter 'plantoes' e 'individuos'.")
+
+        if not isinstance(dados["plantoes"], list) or not isinstance(dados["individuos"], dict):
+            raise TypeError("'plantoes' deve ser lista e 'individuos' deve ser dicionário.")
+
+        assignments, counts = generate_schedule(dados)
+        return {"assignments": assignments, "contagem": dict(counts)}
+
+    except Exception as e:
+        # Retorno amigável para o FastAPI
+        return {"erro": str(e)}
