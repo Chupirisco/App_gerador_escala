@@ -1,8 +1,8 @@
-import Link from "next/link";
 import styles from "@/styles/menuLateral.module.css";
 import Image from "next/image";
+import BotaoNav from "./Widgets";
 
-const MenuLateral: React.FC = () => {
+export default function MenuLateral() {
   return (
     <div className={styles.container}>
       <div className={styles.image}>
@@ -10,11 +10,13 @@ const MenuLateral: React.FC = () => {
       </div>
       <hr className={styles.linha} />
       <nav className={styles.nav}>
-        <Link href={"/inicio"}>ínicio</Link>
-        <Link href={"/gerar"}>Gerar Escala</Link>
+        <BotaoNav link="/inicio" nome="Inicio" />
+        <BotaoNav link="/gerar" nome="Gerar Escala" />
+
+        <div className={styles.config}>
+          <BotaoNav link="/config" nome="settings" />
+        </div>
       </nav>
     </div>
   );
-};
-
-export default MenuLateral;
+}
