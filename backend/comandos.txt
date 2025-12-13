@@ -1,4 +1,4 @@
-from collections import defaultdict
+ from collections import defaultdict
 from typing import Dict, List, Any, Tuple
 
 
@@ -157,3 +157,18 @@ def gerar_escala(dados: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         # Retorno amigável para o FastAPI
         return {"erro": str(e)}
+
+
+// codigo a ser utilizado posteriormente
+
+comandos: 
+
+1. python -m venv venv  --> dentro da pasta backend
+
+2. venv\Scripts\activate
+
+* deu erro? 2.1 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+3. pip install fastapi uvicorn sqlalchemy pymysql pydantic --> dependencias
+
+** pip install -r requirements.txt --> em vez do codigo acima utilize essse para instalar tudo sem erro
