@@ -1,0 +1,36 @@
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--container);
+  height: 100vh;
+  min-height: 500px;
+  align-items: center;
+}
+
+.image {
+  position: relative;
+  min-width: 200px;
+  min-height: 200px;
+}
+
+.linha {
+  height: 2;
+  width: 90%;
+  background-color: var(--fundo);
+  border: none;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.config {
+  position: absolute;
+  bottom: 25px;
+  left: 20px;
+  width: 100%;
+}

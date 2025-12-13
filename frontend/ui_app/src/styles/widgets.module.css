@@ -1,0 +1,16 @@
+.btn {
+  padding: 15px 20px;
+  margin: 10px 0px;
+  min-width: 80%;
+  border-radius: var(--radius);
+  box-shadow: var(--box-shadow);
+  transition: all 0.5s ease;
+}
+
+.btn:hover {
+  background-color: var(--fundo);
+}
+
+.ativo {
+  background-color: var(--fundo);
+}
