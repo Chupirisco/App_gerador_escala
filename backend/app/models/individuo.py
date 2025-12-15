@@ -9,7 +9,9 @@ class Individuo(Base):
     nome_ind = Column(String(200), nullable=False)
     status_ind = Column(String(20), nullable=False)
 
-    id_loc_fk = Column(Integer, ForeignKey("local.id_loc"), nullable=True)
+    id_loc_fk = Column(Integer, ForeignKey("local.id_loc"))
 
-    # relacionamento
-    local = relationship("Local")
+    local = relationship(
+        "Local",
+        back_populates="individuos"
+    )

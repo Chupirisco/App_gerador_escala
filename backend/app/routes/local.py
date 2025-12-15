@@ -6,8 +6,8 @@ from app.models.local import Local
 from app.schemas.local import LocalCreate, LocalResponse
 
 router = APIRouter(
-    prefix="/locais",
-    tags=["Locais"]
+    prefix="/local",
+    tags=["Local"]
 )
 
 # CREATE
@@ -25,20 +25,36 @@ def listar_locais(db: Session = Depends(get_db)):
     return db.query(Local).all()
 
 # READ (por id)
-@router.get("/{local_id}", response_model=LocalResponse)
-def buscar_local(local_id: int, db: Session = Depends(get_db)):
-    local = db.query(Local).filter(Local.id_loc == local_id).first()
+@router.get("/{id}", response_model=LocalResponse)
+def buscar_local(id: int, db: Session = Depends(get_db)):
+    local = db.query(Local).filter(Local.id_loc == id).first()
     if not local:
         raise HTTPException(status_code=404, detail="Local não encontrado")
     return local
 
+# UPDATE
+@router.put("/{id}", response_model=LocalResponse)
+def atualizar_local(id: int, dados: LocalCreate, db: Session = Depends(get_db)):
+    local = db.query(Local).filter(Local.id_loc == id).first()
+    if not local:
+        raise HTTPException(status_code=404, detail="Local não encontrado")
+
+    local.nome_loc = dados.nome_loc
+
+    db.commit()
+    db.refresh(local)
+
+    return local
+
+
 # DELETE
-@router.delete("/{local_id}")
-def deletar_local(local_id: int, db: Session = Depends(get_db)):
-    local = db.query(Local).filter(Local.id_loc == local_id).first()
+@router.delete("/{id}")
+def deletar_local(id: int, db: Session = Depends(get_db)):
+    local = db.query(Local).filter(Local.id_loc == id).first()
     if not local:
         raise HTTPException(status_code=404, detail="Local não encontrado")
 
     db.delete(local)
     db.commit()
-    return {"msg": "Local deletado com sucesso"}
+    return {"msg": "Local deletado"}
+
