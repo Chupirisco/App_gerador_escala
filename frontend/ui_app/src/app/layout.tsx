@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/globals.css";
 import MenuLateral from "@/components/MenuLateral";
 import styles from "@/styles/layout.module.css";
 import { BotaoProvider } from "@/services/provider/BotaoAtivoProvider";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

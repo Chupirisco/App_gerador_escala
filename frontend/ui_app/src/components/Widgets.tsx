@@ -19,7 +19,7 @@ const BotaoNav: React.FC<Props> = ({ link, nome }) => {
   return (
     <Link
       href={link}
-      className={`${styles.btn} ${ativo === nome ? styles.ativo : null}`}
+      className={`${styles.btn} ${ativo === nome ? styles.ativo : null} `}
       onClick={() => setAtivo(nome)}
     >
       {nome} {}
