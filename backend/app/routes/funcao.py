@@ -38,7 +38,7 @@ def buscar_funcao(id: int, db: Session = Depends(get_db)):
 # UPDATE
 @router.put("/{id}", response_model=FuncaoResponse)
 def atuzalizar_funcao(id: int, dados: FuncaoCreate, db: Session = Depends(get_db)):
-    funcao = db.query(Funcao).filter(Funcao.id_fun == id)
+    funcao = db.query(Funcao).filter(Funcao.id_fun == id).first()
     if not funcao:
         raise HTTPException(status_code=404, detail="Função não encontrada")
 
@@ -55,7 +55,7 @@ def atuzalizar_funcao(id: int, dados: FuncaoCreate, db: Session = Depends(get_db
 def deletar_funcao(id: int, db: Session = Depends(get_db)):
     funcao = db.query(Funcao).filter(Funcao.id_fun == id).first()
     if not funcao:
-        raise HTTPExcepiton(status_code=404, detail="Função não encontrada")
+        raise HTTPException(status_code=404, detail="Função não encontrada")
     
     db.delete(funcao)
     db.commit()

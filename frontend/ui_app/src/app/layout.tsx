@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "@/styles/globals.css";
 import MenuLateral from "@/components/MenuLateral";
 import styles from "@/styles/layout.module.css";
-import { BotaoProvider } from "@/services/provider/BotaoAtivoProvider";
 
 
 const geistSans = Geist({
@@ -30,10 +30,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <main className={styles.container}>
-          <BotaoProvider>
-            <MenuLateral />
-          </BotaoProvider>
+        <main className={styles.container}>          
+            <MenuLateral />          
           <div className={styles.div}>{children}</div>
         </main>
       </body>
