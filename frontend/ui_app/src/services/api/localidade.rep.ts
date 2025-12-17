@@ -1,6 +1,12 @@
 import { api } from "./api"
-import { Localidade } from "@/model/localidade.model"
 
 export const listarLocalidade = () => {
-    return api.get<Localidade[]>("/local");
+    return api.get('/local').then((res)=> {
+        return res.data.map((l: any) => ({
+            id: l.id_loc,
+            nome: l.nome_loc,
+        }))
+    } )
 }
+
+

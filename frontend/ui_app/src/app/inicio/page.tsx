@@ -16,7 +16,7 @@ export default function Inicio() {
   const [individuo, setIndividuo] = useState<Individuo[]>([]);
 
   useEffect(()=>{
-    listarFuncao().then((res) => setFuncao(res.data)).catch((err) => console.error('falha na requisção, função: ' + err))
+    listarFuncao().then(setFuncao).catch((err) => console.error('falha na requisção, função: ' + err))
   },[]);
   useEffect(()=>{
     listarLocalidade().then((res) => setLocalidade(res.data)).catch((err) => console.error('falha na requisção, localidade: ' + err))
@@ -27,8 +27,8 @@ export default function Inicio() {
   }, [])
 
   return (
-    <div className="d-flex w-100 h-100 flex-column texto-pri">
-      <h1 className={`text-center w-100 pt-5 ${styles.textPri}`}>Painel de Controle</h1>
+    <div className="d-flex w-100 h-100 flex-column texto-pri py-5">
+      <h1 className={`text-center w-100 ${styles.textPri}`}>Painel de Controle</h1>
       <div className="container text-center h-50 d-flex align-items-center">
         <div className="row w-100 h-25 ">
           <div className="col-12 col-md-4">            

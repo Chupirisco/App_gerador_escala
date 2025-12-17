@@ -27,6 +27,10 @@
 .bdRadius{
   border-radius: var(--radius);
 }
+.cor{
+  background-color: var(--cor-um) !important;
+ 
+}
 
 /* 
   --fundo: #d6eaf8;
