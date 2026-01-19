@@ -8,6 +8,7 @@ import { listarIndividuo } from "@/services/api/individuo.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
 import { useEffect, useState } from "react";
 import  styles from "@/styles/padroes.module.css";
+import Link from "next/link";
 
 
 export default function Inicio() {
@@ -19,35 +20,45 @@ export default function Inicio() {
     listarFuncao().then(setFuncao).catch((err) => console.error('falha na requisção, função: ' + err))
   },[]);
   useEffect(()=>{
-    listarLocalidade().then((res) => setLocalidade(res.data)).catch((err) => console.error('falha na requisção, localidade: ' + err))
+    listarLocalidade().then(setLocalidade).catch((err) => console.error('falha na requisção, localidade: ' + err))
   },[]);
 
   useEffect(() =>{
-    listarIndividuo().then((res) => setIndividuo(res.data)).catch((err) => console.error('falha na requisção, localidade: ' + err))
-  }, [])
+    listarIndividuo().then(setIndividuo).catch((err) => console.error('falha na requisção, localidade: ' + err))
+  }, []);
 
   return (
     <div className="d-flex w-100 h-100 flex-column texto-pri py-5">
       <h1 className={`text-center w-100 ${styles.textPri}`}>Painel de Controle</h1>
+
       <div className="container text-center h-50 d-flex align-items-center">
         <div className="row w-100 h-25 ">
           <div className="col-12 col-md-4">            
-               <button className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
-                <i className={`bi bi-people-fill fs-1 ${styles.iconColor}`}></i> 
-                <br /> 
-                Individuos Cadastrados: {<strong>{individuo.length}</strong>}</button>
+               <Link href={'/configuracao/individuo/'}> 
+               <button  className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
+                  <i className={`bi bi-people-fill fs-1 ${styles.iconColor}`}></i> 
+                  <br /> 
+                  Individuos Cadastrados: {<strong>{individuo.length}</strong>}
+                </button>
+               </Link>
           </div>
           <div className="col-12 col-md-4">
-               <button className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
+            <Link href={'/configuracao/localidade/'}>
+                <button className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
                 <i className={`bi bi-geo-alt-fill fs-1 ${styles.iconColor}`}></i> 
                 <br />
                 Localidades Cadastradas: <strong>{localidade.length}</strong></button>
+            </Link>
+           
           </div>
           <div className="col-12 col-md-4">
-               <button className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
+            <Link href={'/configuracao/funcao/'}>
+                <button className={`btn-light w-100 h-100 border-0 ${styles.bdRadius} ${styles.boxShadow} ${styles.hoverShadow}`}>
                 <i className={`bi bi-person-badge-fill fs-1 ${styles.iconColor}`}></i>
                 <br />
                 Funções Cadastradas: <strong>{funcao.length}</strong></button>
+            </Link>
+
           </div>                 
         </div>
       </div>    

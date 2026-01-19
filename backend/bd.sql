@@ -1,7 +1,6 @@
 create database bd_escala;
 use bd_escala;
 
-
 create table local(
 	id_loc int primary key auto_increment,
     nome_loc varchar(200)

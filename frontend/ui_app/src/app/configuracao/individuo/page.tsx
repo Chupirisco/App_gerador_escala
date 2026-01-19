@@ -11,12 +11,34 @@ export default function IndividuoPage() {
   const [individuo, setIndividuo] = useState<Individuo[]>([]);
   const [individuoFiltro, setIndividuoFiltro] = useState<Individuo[]>([]);
   const [inativo, setInativo] = useState(false);
+  const [filtroNome, setFiltroNome] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState('');
 
   // métodos
   const mostrarInativos = () => {
     setInativo(!inativo);
     console.log(inativo);
   }
+
+const filtrar = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  let lista = [...individuo];
+
+ 
+  if (filtroNome.trim() !== '') {
+    lista = lista.filter(ind =>
+      ind.nome.toLowerCase().includes(filtroNome.toLowerCase())
+    );
+  }
+
+  if (filtroStatus !== '') {
+    lista = lista.filter(ind => ind.status === filtroStatus);
+  }
+
+  setIndividuoFiltro(lista);
+};
+
 
   const carregarIndividuos  = async () =>  {
     try{
@@ -27,20 +49,50 @@ export default function IndividuoPage() {
       console.error("falha na requisição, individuo: " + err)
     }   
   }
-
+  
   // useEffect
   useEffect(()=>{
    carregarIndividuos();
   },[]);
 
-  useEffect(()=>{
-    inativo ?
-    setIndividuoFiltro(individuo) : setIndividuoFiltro(individuo.filter(ind => ind.status === 'ativo'));
-  }, [inativo, individuo])
+ useEffect(() => {
+  if (inativo) {
+    setIndividuoFiltro(individuo);
+  } else {
+    setIndividuoFiltro(individuo.filter(ind => ind.status === 'ativo'));
+  }
+}, [inativo, individuo]);
+
 
   return (
     <div className="d-flex h-100 w-100 py-5 flex-column align-items-center">
       <h1 className="mb-5">Individuos</h1>
+
+      <div className="d-flex justify-content-end w-75 mb-4">
+        <button className="btn btn-primary">Cadastrar individuo +</button>
+      </div>
+
+      <div className="card mb-4 shadow-sm w-75">        
+        <div className="card-body">
+          <h3 >Filtros</h3>
+          <form className="row g-2 align-items-end" onSubmit={filtrar}>             
+            <div className="col-md-7">                
+                <input type="text" className="form-control" placeholder="Filtrar por nome" onChange={(e)=> setFiltroNome(e.target.value)}/>
+            </div>
+              <div className="col-md-4">                
+                <select className="form-select" onChange={(e) => setFiltroStatus(e.target.value)}>
+                  <option value=''>Filtrar por status</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                </select>
+            </div>
+            <button type="submit" className="btn btn-primary col-md-1">Filtrar</button>
+          </form>        
+        </div>  
+      </div>
+
+       
+
       <div className="table-responsive w-75 shadow-sm table-sm rounded">
         <table className="table table-hover table-bordered align-middle mb-0">
           <thead >
@@ -72,7 +124,7 @@ export default function IndividuoPage() {
           </tbody>        
         </table>
         <div className="d-flex bg-white justify-content-end py-2 px-3">
-          <input type="checkbox" id="check" className="form-check-input"  onChange={mostrarInativos} />
+          <input type="checkbox" id="check" className="form-check-input" checked={inativo} onChange={mostrarInativos} />
           <label htmlFor="check" className="ms-2 form-check-label">Mostrar inativos </label>
         </div>
       </div>
