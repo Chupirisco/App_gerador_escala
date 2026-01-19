@@ -11,13 +11,13 @@ router = APIRouter(
 )
 
 # CREATE
-@router.post("/", response_model=LocalResponse)
+@router.post("/")
 def criar_local(local: LocalCreate, db: Session = Depends(get_db)):
     novo_local = Local(nome_loc=local.nome_loc)
     db.add(novo_local)
     db.commit()
     db.refresh(novo_local)
-    return novo_local
+    return {"msg": "Sucesso"}
 
 # READ (todos)
 @router.get("/", response_model=list[LocalResponse])

@@ -2,6 +2,7 @@
 import { Individuo } from "@/model/individuo.model";
 import { listarIndividuo } from "@/services/api/individuo.rep";
 import  estiloP from "@/styles/padroes.module.css";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 
@@ -69,7 +70,7 @@ const filtrar = (e: React.FormEvent) => {
       <h1 className="mb-5">Individuos</h1>
 
       <div className="d-flex justify-content-end w-75 mb-4">
-        <button className="btn btn-primary">Cadastrar individuo +</button>
+        <Link href={"/configuracao/individuo/cadastrar_individuo"} className="btn btn-primary">Cadastrar individuo +</Link>
       </div>
 
       <div className="card mb-4 shadow-sm w-75">        

@@ -3,6 +3,7 @@ import  estiloP from "@/styles/padroes.module.css";
 import { Funcao } from "@/model/funcao.model";
 import { listarFuncao } from "@/services/api/funcao.rep";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function FuncaoPage() {
   const [funcao, setFuncao] = useState<Funcao[]>([]);
@@ -40,7 +41,7 @@ export default function FuncaoPage() {
       <h1 className="mb-5">Funções</h1>
 
        <div className="d-flex justify-content-end w-75 mb-4">
-          <button className="btn btn-primary">Cadastrar função +</button>
+          <Link href={'/configuracao/funcao/cadastrar_funcao/'} className="btn btn-primary">Cadastrar função +</Link>
         </div>
         <div className="card mb-4 shadow-sm w-75">        
           <div className="card-body">

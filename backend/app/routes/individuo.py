@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 # CREATE
-@router.post("/", response_model=IndividuoResponse)
+@router.post("/")
 def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
     
     if ind.id_loc_fk is not None:
@@ -34,7 +34,7 @@ def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(novo_ind)
 
-    return novo_ind
+    return {"msg": "Sucesso"}
 
 # READ (todos)
 @router.get("/", response_model=list[IndividuoResponse])

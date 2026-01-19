@@ -11,13 +11,13 @@ router = APIRouter(
 )
 
 # CREATE
-@router.post("/", response_model=FuncaoResponse)
+@router.post("/")
 def criar_funcao(funcao: FuncaoCreate, db: Session = Depends(get_db)):
     nova_funcao = Funcao(nome_fun=funcao.nome_fun)
     db.add(nova_funcao)
     db.commit()
     db.refresh(nova_funcao)
-    return nova_funcao
+    return {"msg": "Sucesso"}
 
 
 # READ (todos)
