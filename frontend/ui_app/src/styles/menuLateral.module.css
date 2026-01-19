@@ -34,3 +34,7 @@
   left: 20px;
   width: 100%;
 }
+
+.sessaoCor{
+    color: var(--texto-sec);
+}

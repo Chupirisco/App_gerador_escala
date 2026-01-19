@@ -1,9 +1,8 @@
 "use client";
 
-import { BotaoContext } from "@/services/provider/BotaoAtivoProvider";
-import styles from "@/styles/widgets.module.css";
 import Link from "next/link";
-import { useContext } from "react";
+import { usePathname } from "next/navigation";
+import styles from "@/styles/widgets.module.css";
 
 interface Props {
   link: string;
@@ -11,18 +10,16 @@ interface Props {
 }
 
 const BotaoNav: React.FC<Props> = ({ link, nome }) => {
-  const contexto = useContext(BotaoContext);
+  const pathname = usePathname();
 
-  if (!contexto) return null;
+  const ativo = pathname === link;
 
-  const { ativo, setAtivo } = contexto;
   return (
     <Link
       href={link}
-      className={`${styles.btn} ${ativo === nome ? styles.ativo : null}`}
-      onClick={() => setAtivo(nome)}
+      className={`${styles.btn} ${ativo ? styles.ativo : ""}`}
     >
-      {nome} {}
+      {nome}
     </Link>
   );
 };
