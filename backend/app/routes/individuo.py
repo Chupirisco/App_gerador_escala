@@ -27,6 +27,7 @@ def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
     novo_ind = Individuo(
         nome_ind=ind.nome_ind,
         status_ind=ind.status_ind,
+        nivel_ind=ind.nivel_ind,
         id_loc_fk=ind.id_loc_fk
     )
 
@@ -73,6 +74,7 @@ def atualizar_individuo(
 
     ind.nome_ind = dados.nome_ind
     ind.status_ind = dados.status_ind
+    ind.nivel_ind = dados.nivel_ind
     ind.id_loc_fk = dados.id_loc_fk
 
     db.commit()
