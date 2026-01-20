@@ -1,7 +1,9 @@
 'use client'
+import ModalConfirmacao from "@/components/ModalConfirmacao";
 import { Individuo } from "@/model/individuo.model";
-import { listarIndividuo } from "@/services/api/individuo.rep";
+import { excluirIndividuo, listarIndividuo } from "@/services/api/individuo.rep";
 import  estiloP from "@/styles/padroes.module.css";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 
@@ -13,6 +15,10 @@ export default function IndividuoPage() {
   const [inativo, setInativo] = useState(false);
   const [filtroNome, setFiltroNome] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
+
+  const [idExcluir, setIdExcluir] = useState<number | null>(null);
+  const [modalConf, setModalConf] = useState(false);
+
 
   // métodos
   const mostrarInativos = () => {
@@ -38,6 +44,23 @@ const filtrar = (e: React.FormEvent) => {
 
   setIndividuoFiltro(lista);
 };
+
+  const excluir = async () => {
+    try {
+    
+     const mensagem = await excluirIndividuo(idExcluir!);
+     if(mensagem.msg === "Sucesso"){
+      setIndividuo(prev => prev.filter(f => f.id !== idExcluir!));
+      setIndividuoFiltro(prev => prev.filter(f => f.id !== idExcluir!));
+     }  
+  
+      setModalConf(false);
+      setIdExcluir(null);
+    
+    } catch (err) {
+      console.error("Erro ao excluir:", err);
+    }
+  }
 
 
   const carregarIndividuos  = async () =>  {
@@ -69,7 +92,7 @@ const filtrar = (e: React.FormEvent) => {
       <h1 className="mb-5">Individuos</h1>
 
       <div className="d-flex justify-content-end w-75 mb-4">
-        <button className="btn btn-primary">Cadastrar individuo +</button>
+        <Link href={"/configuracao/individuo/cadastrar_individuo"} className="btn btn-primary">Cadastrar individuo +</Link>
       </div>
 
       <div className="card mb-4 shadow-sm w-75">        
@@ -116,8 +139,11 @@ const filtrar = (e: React.FormEvent) => {
                     </span>
                   </td>
                   <td className="d-flex justify-content-center gap-2">
-                    <button className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></button>
-                    <button className="btn btn-danger"><i className="bi bi-trash-fill text-white"></i></button>                    
+                    <Link href={`/configuracao/individuo/editar_individuo/${ind.id}`} className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></Link>
+                    <button className="btn btn-danger"  onClick={() => {
+                      setIdExcluir(ind.id)
+                      setModalConf(true)
+                    }}><i className="bi bi-trash-fill text-white"></i></button>                    
                   </td>
                 </tr>
               ))}
@@ -128,6 +154,13 @@ const filtrar = (e: React.FormEvent) => {
           <label htmlFor="check" className="ms-2 form-check-label">Mostrar inativos </label>
         </div>
       </div>
+      {modalConf && (
+                    <ModalConfirmacao
+                      mensagem="Deseja realmente excluir este registro?"
+                      onConfirmar={() => excluir()}
+                      onCancelar={() => setModalConf(false)}
+                    />
+                  )}
     </div>
   );
 }

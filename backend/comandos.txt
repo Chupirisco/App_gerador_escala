@@ -172,3 +172,8 @@ comandos:
 3. pip install fastapi uvicorn sqlalchemy pymysql pydantic --> dependencias
 
 ** pip install -r requirements.txt --> em vez do codigo acima utilize essse para instalar tudo sem erro
+
+Rodar o FastAPI
+1. primeiro entre na pasta .\app 
+
+2. execute uvicorn main:app --reload

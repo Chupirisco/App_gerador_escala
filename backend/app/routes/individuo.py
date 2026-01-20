@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 # CREATE
-@router.post("/", response_model=IndividuoResponse)
+@router.post("/")
 def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
     
     if ind.id_loc_fk is not None:
@@ -34,7 +34,7 @@ def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(novo_ind)
 
-    return novo_ind
+    return {"msg": "Sucesso"}
 
 # READ (todos)
 @router.get("/", response_model=list[IndividuoResponse])
@@ -44,7 +44,7 @@ def listar_individuos(db: Session = Depends(get_db)):
 # READ (por id)
 @router.get("/{id}", response_model=IndividuoResponse)
 def buscar_individuo(id: int, db: Session = Depends(get_db)):
-    ind = db.query(Individuo).filter(Individuo.id_ind == ind_id).first()
+    ind = db.query(Individuo).filter(Individuo.id_ind == id).first()
 
     if not ind:
         raise HTTPException(status_code=404, detail="Indivíduo não encontrado")
@@ -52,7 +52,7 @@ def buscar_individuo(id: int, db: Session = Depends(get_db)):
     return ind
 
 # UPDATE
-@router.put("/{id}", response_model=IndividuoResponse)
+@router.put("/{id}")
 def atualizar_individuo(
     id: int,
     dados: IndividuoCreate,
@@ -78,7 +78,7 @@ def atualizar_individuo(
     db.commit()
     db.refresh(ind)
 
-    return ind
+    return {"msg": "Sucesso" }
 
 
 # DELETE
@@ -92,4 +92,4 @@ def deletar_individuo(id: int, db: Session = Depends(get_db)):
     db.delete(ind)
     db.commit()
 
-    return {"msg": "Indivíduo deletado"}
+    return {"msg": "Sucesso"}
