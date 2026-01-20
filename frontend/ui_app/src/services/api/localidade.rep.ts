@@ -18,4 +18,10 @@ export const criarLocal = async (nome: string) => {
     });
 }
 
+export const excluirLocal = async (id: number) => {
+    return api.delete(`/local/${id}`).then((res) => {
+        return res.data;
+    })
+}
+
 

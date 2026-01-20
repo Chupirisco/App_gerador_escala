@@ -15,3 +15,9 @@ export const criarFuncao = async (nome: string) => {
     return res.data;
   });
 }
+
+export const excluirFuncao = async (id: number) => {
+  return api.delete(`/funcao/${id}`).then((res) => {
+    return res.data;
+  });
+}

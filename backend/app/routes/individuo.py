@@ -92,4 +92,4 @@ def deletar_individuo(id: int, db: Session = Depends(get_db)):
     db.delete(ind)
     db.commit()
 
-    return {"msg": "Indivíduo deletado"}
+    return {"msg": "Sucesso"}

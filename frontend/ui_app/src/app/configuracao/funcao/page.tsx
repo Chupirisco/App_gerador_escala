@@ -1,26 +1,46 @@
 'use client'
 import  estiloP from "@/styles/padroes.module.css";
 import { Funcao } from "@/model/funcao.model";
-import { listarFuncao } from "@/services/api/funcao.rep";
+import { excluirFuncao, listarFuncao } from "@/services/api/funcao.rep";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ModalConfirmacao from "@/components/ModalConfirmacao";
 
 export default function FuncaoPage() {
   const [funcao, setFuncao] = useState<Funcao[]>([]);
   const [funcaoFitro, setFuncaoFiltro] = useState<Funcao[]>([]);
   const [filtro, setFiltro] = useState('');
+  
+  const [idExcluir, setIdExcluir] = useState<number | null>(null);
+  const [modalConf, setModalConf] = useState(false);
 
-  const filtrar = (e: React.FormEvent) => {
-    e.preventDefault();
+const filtrar = (e: React.FormEvent) => {
+  e.preventDefault()
 
-     let lista = [...funcao];
+  setFuncaoFiltro(
+    funcao.filter(fun =>
+      fun.nome.toLowerCase().includes(filtro.toLowerCase())
+    )
+  )
+}
 
-    setFuncaoFiltro(
-      lista.filter(fun =>
-        fun.nome.toLowerCase().includes(filtro.toLowerCase())
-      )
-    );
+  const excluir = async () => {
+  try {
+  
+   const mensagem = await excluirFuncao(idExcluir!);
+   if(mensagem.msg === "Sucesso"){
+    setFuncao(prev => prev.filter(f => f.id !== idExcluir!));
+    setFuncaoFiltro(prev => prev.filter(f => f.id !== idExcluir!));
+   }  
+
+    setModalConf(false);
+    setIdExcluir(null);
+  
+  } catch (err) {
+    console.error("Erro ao excluir:", err);
   }
+}
+
 
      const carregarLocal = async () =>  {
         try{
@@ -69,15 +89,28 @@ export default function FuncaoPage() {
                 <tr key={fun.id}>
                   <th className="text-center">{index + 1}</th>
                   <td className="ps-4" >{fun.nome}</td>
-                  <td className="d-flex justify-content-center gap-2">
-                    <button className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></button>
-                    <button className="btn btn-danger"><i className="bi bi-trash-fill text-white"></i></button>                    
+                  <td className="d-flex justify-content-center gap-2">                 
+                    <button
+                    className="btn btn-danger"
+                    onClick={() => {
+                      setIdExcluir(fun.id)
+                      setModalConf(true)
+                    }}>
+                    <i className="bi bi-trash-fill text-white"></i>
+                  </button>                
                   </td>
                 </tr>
               ))}
           </tbody>
         </table>
       </div>
+      {modalConf && (
+        <ModalConfirmacao
+          mensagem="Deseja realmente excluir este registro?"
+          onConfirmar={() => excluir()}
+          onCancelar={() => setModalConf(false)}
+        />
+      )}
     </div>
   );
 }

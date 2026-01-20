@@ -32,21 +32,6 @@ def buscar_local(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Local não encontrado")
     return local
 
-# UPDATE
-@router.put("/{id}", response_model=LocalResponse)
-def atualizar_local(id: int, dados: LocalCreate, db: Session = Depends(get_db)):
-    local = db.query(Local).filter(Local.id_loc == id).first()
-    if not local:
-        raise HTTPException(status_code=404, detail="Local não encontrado")
-
-    local.nome_loc = dados.nome_loc
-
-    db.commit()
-    db.refresh(local)
-
-    return local
-
-
 # DELETE
 @router.delete("/{id}")
 def deletar_local(id: int, db: Session = Depends(get_db)):
@@ -56,5 +41,5 @@ def deletar_local(id: int, db: Session = Depends(get_db)):
 
     db.delete(local)
     db.commit()
-    return {"msg": "Local deletado"}
+    return {"msg": "Sucesso"}
 

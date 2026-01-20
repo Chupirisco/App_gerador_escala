@@ -32,7 +32,7 @@ export default function MenuLateral() {
         <BotaoNav link="/escala/gerar" nome="Gerar Escala" />
 
         <div className={styles.config}>
-          <BotaoNav link="/config" nome="settings" />
+        <BotaoNav link="/config" nome="Configurações"/>
         </div>
 
       </nav>

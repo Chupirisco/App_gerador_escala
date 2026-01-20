@@ -11,12 +11,18 @@ export const listarIndividuo = async () => {
     }));
 }
 
-export const criarIndividuo = async (nome: string, status: string, id: number) =>{
+export const criarIndividuo = async (nome: string, status: string, id: number) => {
     return api.post('/individuo', {
         "nome_ind": nome,
         "status_ind": status,
         "id_loc_fk": id
     }).then((res) => {
+        return res.data;
+    });
+}
+
+export const excluirIndividuo = async (id: number) => {
+    return api.delete(`/individuo/${id}`).then((res) => {
         return res.data;
     });
 }
