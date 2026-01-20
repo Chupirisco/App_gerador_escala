@@ -68,7 +68,7 @@ const filtrar = (e: React.FormEvent) => {
             <h3 >Filtros</h3>
             <form className="row g-2 align-items-end" onSubmit={filtrar}>             
               <div className="col-md-11">                
-                  <input type="text" className="form-control" placeholder="Buscar por nome" onChange={(e)=> setFiltro(e.target.value)}/>
+                  <input type="text" className="form-control" placeholder="Filtrar por nome" onChange={(e)=> setFiltro(e.target.value)}/>
               </div>            
               <button type="submit" className="btn btn-primary col-md-1">Filtrar</button>
             </form>        

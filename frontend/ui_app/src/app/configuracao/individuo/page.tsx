@@ -139,7 +139,7 @@ const filtrar = (e: React.FormEvent) => {
                     </span>
                   </td>
                   <td className="d-flex justify-content-center gap-2">
-                    <button className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></button>
+                    <Link href={`/configuracao/individuo/editar_individuo/${ind.id}`} className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></Link>
                     <button className="btn btn-danger"  onClick={() => {
                       setIdExcluir(ind.id)
                       setModalConf(true)

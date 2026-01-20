@@ -44,7 +44,7 @@ def listar_individuos(db: Session = Depends(get_db)):
 # READ (por id)
 @router.get("/{id}", response_model=IndividuoResponse)
 def buscar_individuo(id: int, db: Session = Depends(get_db)):
-    ind = db.query(Individuo).filter(Individuo.id_ind == ind_id).first()
+    ind = db.query(Individuo).filter(Individuo.id_ind == id).first()
 
     if not ind:
         raise HTTPException(status_code=404, detail="Indivíduo não encontrado")
@@ -52,7 +52,7 @@ def buscar_individuo(id: int, db: Session = Depends(get_db)):
     return ind
 
 # UPDATE
-@router.put("/{id}", response_model=IndividuoResponse)
+@router.put("/{id}")
 def atualizar_individuo(
     id: int,
     dados: IndividuoCreate,
@@ -78,7 +78,7 @@ def atualizar_individuo(
     db.commit()
     db.refresh(ind)
 
-    return ind
+    return {"msg": "Sucesso" }
 
 
 # DELETE

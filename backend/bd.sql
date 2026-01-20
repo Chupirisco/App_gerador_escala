@@ -15,7 +15,33 @@ create table individuo(
 	id_ind int primary key auto_increment,
     nome_ind varchar(200),
     status_ind varchar(20),
+    nivel_ind enum ('novato', 'intermediario', 'cerimoniario'),
     id_loc_fk int null,
     foreign key (id_loc_fk) references local(id_loc)
 );
-select * from local;
+
+create table indisponibilidade(
+	id_indp int primary key auto_increment,
+    data_indp date,
+    id_ind_fk int,
+    foreign key (id_ind_fk) references individuo (id_ind)
+);
+
+create table escala_dia(
+	id_esd int primary key auto_increment,
+    data_esd date,
+    horario_esd time,
+    id_loc_fk int,
+    foreign key (id_loc_fk) references local(id_loc)
+);
+
+create table escala_dia_funcao(
+	id_edf int primary key auto_increment,
+    quantidade int,
+    id_fun_fk int,
+    id_esd_fk int,
+    foreign key (id_fun_fk) references funcao(id_fun),
+    foreign key (id_esd_fk) references escala_dia(id_esd)    
+);
+
+

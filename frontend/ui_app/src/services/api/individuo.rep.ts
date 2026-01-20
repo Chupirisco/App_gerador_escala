@@ -27,3 +27,27 @@ export const excluirIndividuo = async (id: number) => {
     });
 }
 
+export const editarIndividuo = async (idInd: number, nome: string, status: string, idLoc: number) => {
+    return api.put(`/individuo/${idInd}`, 
+        {
+            "nome_ind": nome,
+            "status_ind": status,
+            "id_loc_fk": idLoc
+        }
+    ).then((res) => { return res.data });
+}
+
+import { Individuo } from "@/model/individuo.model";
+
+export const buscarIndividuoPorId = async (id: number): Promise<Individuo> => {
+  const res = await api.get(`/individuo/${id}`);
+
+  return {    
+    nome: res.data.nome_ind,
+    status: res.data.status_ind,
+    id_loc_fk: res.data.id_loc_fk,
+    id: res.data.id,
+  };
+};
+
+
