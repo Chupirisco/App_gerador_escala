@@ -5,6 +5,7 @@ export const listarFuncao = async () => {
   return res.data.map((f: any) => ({
     id: f.id_fun,
     nome: f.nome_fun,
+    nivel: f.nivel_fun
   }));
 };
 

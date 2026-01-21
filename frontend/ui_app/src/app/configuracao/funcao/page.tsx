@@ -5,6 +5,7 @@ import { excluirFuncao, listarFuncao } from "@/services/api/funcao.rep";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ModalConfirmacao from "@/components/ModalConfirmacao";
+import { verificarNivel } from "@/services/utils/verificacoes";
 
 export default function FuncaoPage() {
   const [funcao, setFuncao] = useState<Funcao[]>([]);
@@ -25,21 +26,23 @@ const filtrar = (e: React.FormEvent) => {
 }
 
   const excluir = async () => {
-  try {
-  
-   const mensagem = await excluirFuncao(idExcluir!);
-   if(mensagem.msg === "Sucesso"){
-    setFuncao(prev => prev.filter(f => f.id !== idExcluir!));
-    setFuncaoFiltro(prev => prev.filter(f => f.id !== idExcluir!));
-   }  
+    try {
+    
+    const mensagem = await excluirFuncao(idExcluir!);
+    if(mensagem.msg === "Sucesso"){
+      setFuncao(prev => prev.filter(f => f.id !== idExcluir!));
+      setFuncaoFiltro(prev => prev.filter(f => f.id !== idExcluir!));
+    }  
 
     setModalConf(false);
     setIdExcluir(null);
   
-  } catch (err) {
-    console.error("Erro ao excluir:", err);
+    } catch (err) {
+      console.error("Erro ao excluir:", err);
+    }
   }
-}
+
+  
 
 
      const carregarLocal = async () =>  {
@@ -81,14 +84,17 @@ const filtrar = (e: React.FormEvent) => {
             <tr >
               <th className={`${estiloP.cor} text-center px-4`}>Nº</th>
               <th className={`${estiloP.cor} w-100 ps-4`}>Nome</th>
+              <th className={`${estiloP.cor} text-center px-4`}>Experiência</th>
               <th className={`${estiloP.cor} text-center px-5`}>Ações</th>
             </tr>
           </thead>
           <tbody >
               {funcaoFitro.map((fun, index) => (
+                
                 <tr key={fun.id}>
                   <th className="text-center">{index + 1}</th>
                   <td className="ps-4" >{fun.nome}</td>
+                  <td className="px-4" >{verificarNivel(fun.nivel)}</td>
                   <td className="d-flex justify-content-center gap-2">                 
                     <button
                     className="btn btn-danger"

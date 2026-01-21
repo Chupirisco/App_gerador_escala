@@ -30,10 +30,19 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <main className={styles.container}>          
-            <MenuLateral />          
-          <div className={styles.div}>{children}</div>
-        </main>
+      <main className={styles.container}>
+       
+       <div className={styles.sidebar}>
+          <MenuLateral />
+       </div>
+        
+        <div className={styles.content}>
+          {children}
+        </div>
+      </main>
+
+
+
       </body>
     </html>
   );

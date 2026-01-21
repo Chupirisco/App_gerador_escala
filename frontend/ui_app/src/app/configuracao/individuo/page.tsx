@@ -2,6 +2,7 @@
 import ModalConfirmacao from "@/components/ModalConfirmacao";
 import { Individuo } from "@/model/individuo.model";
 import { excluirIndividuo, listarIndividuo } from "@/services/api/individuo.rep";
+import { verificarNivel, verificarStatus } from "@/services/utils/verificacoes";
 import  estiloP from "@/styles/padroes.module.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -121,7 +122,8 @@ const filtrar = (e: React.FormEvent) => {
           <thead >
             <tr >
               <th className={`${estiloP.cor} text-center px-4`}>Nº</th>
-              <th className={`${estiloP.cor} w-100 ps-4`}>Nome</th>
+              <th className={`${estiloP.cor} w-100 ps-4`}>Nome</th>              
+              <th className={`${estiloP.cor} text-center px-5`}>Experiência</th>
               <th className={`${estiloP.cor} text-center px-5`}>Status</th>
               <th className={`${estiloP.cor} text-center px-5`}>Ações</th>
             </tr>
@@ -130,20 +132,24 @@ const filtrar = (e: React.FormEvent) => {
               {individuoFiltro.map((ind, index) => (
                 <tr key={ind.id}>
                   <th className="text-center">{index + 1}</th>
-                  <td className="ps-4" >{ind.nome}</td>
+                  <td className="ps-4" >{ind.nome}</td>                  
+                  <td className="px-4 text-center" >{verificarNivel(ind.nivel)}</td>
                   <td className='text-center'> 
                    <span
                     className={`badge rounded-2 p-2
-                      ${ind.status === 'ativo' ? 'bg-success' : 'bg-secondary'}`}>
+                      ${verificarStatus(ind.status)}`}>
                     {ind.status.toUpperCase()}
                     </span>
                   </td>
                   <td className="d-flex justify-content-center gap-2">
+                    <button className="btn btn-primary"><i className="bi bi-eye-fill"></i></button>
                     <Link href={`/configuracao/individuo/editar_individuo/${ind.id}`} className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></Link>
+                    <button className="btn btn-secondary"><i className="bi bi-calendar-x"></i></button>
                     <button className="btn btn-danger"  onClick={() => {
                       setIdExcluir(ind.id)
                       setModalConf(true)
-                    }}><i className="bi bi-trash-fill text-white"></i></button>                    
+                    }}><i className="bi bi-trash-fill text-white"></i></button>          
+                            
                   </td>
                 </tr>
               ))}

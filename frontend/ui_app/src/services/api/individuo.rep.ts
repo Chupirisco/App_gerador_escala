@@ -7,6 +7,7 @@ export const listarIndividuo = async () => {
         id: i.id_ind,
         nome: i.nome_ind,
         status: i.status_ind,
+        nivel: i.nivel_ind,
         id_loc_fk: i.id_loc_fk,
     }));
 }
