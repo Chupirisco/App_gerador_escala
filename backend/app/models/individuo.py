@@ -16,3 +16,11 @@ class Individuo(Base):
         "Local",
         back_populates="individuos"
     )
+
+    indisponibilidades = relationship(
+        "Indisponibilidade",
+        back_populates="individuo",
+        cascade="all, delete-orphan"
+    )
+
+

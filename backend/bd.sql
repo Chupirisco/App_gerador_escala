@@ -35,6 +35,7 @@ create table escala_dia(
     foreign key (id_loc_fk) references local(id_loc)
 );
 
+# pega a função e coloca uma quantidade maxima de pessoas escaladas para ela
 create table escala_dia_funcao(
 	id_edf int primary key auto_increment,
     quantidade int,
@@ -57,7 +58,5 @@ create table escala_resultado(
 create index idx_indp_individuo_data on indisponibilidade (id_ind_fk, data_indp);
 create index idx_escala_dia_data on escala_dia(data_esd);
 create index idx_resultado_escala on escala_resultado (id_esd_fk);
-
-
 
 

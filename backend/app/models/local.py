@@ -13,3 +13,9 @@ class Local(Base):
         back_populates="local",
         cascade="all, delete"
     )
+
+    escalas_dia = relationship(
+    "EscalaDia",
+    back_populates="local",
+    cascade="all, delete-orphan"
+)
