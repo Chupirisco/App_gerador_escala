@@ -11,10 +11,11 @@ export const listarIndividuo = async () => {
     }));
 }
 
-export const criarIndividuo = async (nome: string, status: string, id: number) => {
+export const criarIndividuo = async (nome: string, status: string, nivel: string , id: number) => {
     return api.post('/individuo', {
         "nome_ind": nome,
         "status_ind": status,
+        "nivel_ind": nivel,
         "id_loc_fk": id
     }).then((res) => {
         return res.data;
@@ -27,11 +28,12 @@ export const excluirIndividuo = async (id: number) => {
     });
 }
 
-export const editarIndividuo = async (idInd: number, nome: string, status: string, idLoc: number) => {
+export const editarIndividuo = async (idInd: number, nome: string, status: string, nivel: string , idLoc: number) => {
     return api.put(`/individuo/${idInd}`, 
         {
             "nome_ind": nome,
             "status_ind": status,
+            "nivel_ind": nivel,
             "id_loc_fk": idLoc
         }
     ).then((res) => { return res.data });
@@ -45,6 +47,7 @@ export const buscarIndividuoPorId = async (id: number): Promise<Individuo> => {
   return {    
     nome: res.data.nome_ind,
     status: res.data.status_ind,
+    nivel: res.data.nivel_ind,
     id_loc_fk: res.data.id_loc_fk,
     id: res.data.id,
   };

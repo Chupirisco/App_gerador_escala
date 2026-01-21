@@ -7,6 +7,7 @@ class Funcao(Base):
 
     id_fun = Column(Integer, primary_key=True, index=True)
     nome_fun = Column(String(200), nullable=False)
+    nivel_fun = Column(String(20), nullable=False)
 
     escalas_dia = relationship(
     "EscalaDiaFuncao",
