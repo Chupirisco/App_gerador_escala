@@ -24,18 +24,20 @@ def criar_individuo(ind: IndividuoCreate, db: Session = Depends(get_db)):
                 detail="Local informado não existe"
             )
 
-    novo_ind = Individuo(
-        nome_ind=ind.nome_ind,
-        status_ind=ind.status_ind,
-        nivel_ind=ind.nivel_ind,
-        id_loc_fk=ind.id_loc_fk
-    )
+        novo_ind = Individuo(
+            nome_ind=ind.nome_ind,
+            status_ind=ind.status_ind,
+            nivel_ind=ind.nivel_ind,
+            id_loc_fk=ind.id_loc_fk
+        )
 
-    db.add(novo_ind)
-    db.commit()
-    db.refresh(novo_ind)
+        db.add(novo_ind)
+        db.commit()
+        db.refresh(novo_ind)
 
-    return {"msg": "Sucesso"}
+        return {"msg": "Sucesso"}
+    
+    return {"msg": "Falhou"}
 
 # READ (todos)
 @router.get("/", response_model=list[IndividuoResponse])

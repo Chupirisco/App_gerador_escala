@@ -6,7 +6,7 @@ class IndividuoBase(BaseModel):
     nome_ind: str
     status_ind: str
     nivel_ind: str
-    id_loc_fk: Optional[int] = None
+    id_loc_fk: int
     
 
 
