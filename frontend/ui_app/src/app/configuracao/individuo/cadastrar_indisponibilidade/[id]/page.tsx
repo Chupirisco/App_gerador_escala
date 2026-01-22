@@ -250,7 +250,7 @@ export default function Page() {
             Cancelar
           </Link>
           <button onClick={cadastrar} className="btn  btn-primary ">
-            Confirmar
+            Aplicar
           </button>
         </div>
       </div>
