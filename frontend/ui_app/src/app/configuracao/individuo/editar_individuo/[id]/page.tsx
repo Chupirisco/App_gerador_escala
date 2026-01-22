@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 
 import Notificacao from "@/components/Notificacao";
-import { Individuo } from "@/model/individuo.model";
+// import { Individuo } from "@/model/individuo.model";
 import { Localidade } from "@/model/localidade.model";
 import { editarIndividuo, buscarIndividuoPorId } from "@/services/api/individuo.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
@@ -13,7 +13,7 @@ import { listarLocalidade } from "@/services/api/localidade.rep";
 export default function EditarIndividuo() {
   const { id } = useParams();
 
-  const [individuo, setIndividuo] = useState<Individuo | null>(null);
+  // const [individuo, setIndividuo] = useState<Individuo | null>(null);
   const [nome, setNome] = useState("");
   const [status, setStatus] = useState("ativo");
   const [idLocal, setIdLocal] = useState<number | null>(null);

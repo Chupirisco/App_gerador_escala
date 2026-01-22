@@ -144,7 +144,7 @@ const filtrar = (e: React.FormEvent) => {
                   <td className="d-flex justify-content-center gap-2">
                     <button className="btn btn-primary"><i className="bi bi-eye-fill"></i></button>
                     <Link href={`/configuracao/individuo/editar_individuo/${ind.id}`} className="btn btn-warning"><i className="bi bi-pen-fill text-white"></i></Link>
-                    <button className="btn btn-secondary"><i className="bi bi-calendar-x"></i></button>
+                    <Link href={`/configuracao/individuo/cadastrar_indisponibilidade/${ind.id}`} className="btn btn-secondary"><i className="bi bi-calendar-x"></i></Link>
                     <button className="btn btn-danger"  onClick={() => {
                       setIdExcluir(ind.id)
                       setModalConf(true)
