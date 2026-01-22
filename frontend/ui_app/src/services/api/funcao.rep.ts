@@ -5,12 +5,14 @@ export const listarFuncao = async () => {
   return res.data.map((f: any) => ({
     id: f.id_fun,
     nome: f.nome_fun,
+    nivel: f.nivel_fun
   }));
 };
 
-export const criarFuncao = async (nome: string) => {
+export const criarFuncao = async (nome: string, nivel: string) => {
   return api.post('/funcao', {
-    "nome_fun": nome
+    "nome_fun": nome,
+    "nivel_fun": nivel
   }).then((res)=> {
     return res.data;
   });

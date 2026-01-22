@@ -4,7 +4,7 @@ import BotaoNav from "./Widgets";
 
 export default function MenuLateral() {
   return (
-    <div className={styles.container}>
+    <div className={styles.container }>
       <div className={styles.image}>
         <Image src={"/images/logo.png"} alt="uma imagem" fill />
       </div>
@@ -30,12 +30,13 @@ export default function MenuLateral() {
           Escala
         </p>
         <BotaoNav link="/escala/gerar" nome="Gerar Escala" />
-
+        <br />
+        {/* Botão fixado no final */}
         <div className={styles.config}>
-        <BotaoNav link="/config" nome="Configurações"/>
+          <BotaoNav link="/config" nome="Configurações" />
         </div>
-
       </nav>
+      
     </div>
   );
 }

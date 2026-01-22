@@ -9,12 +9,13 @@ export default function CadastrarFuncao(){
     
         const [nome, setNome] = useState("");
         const [not, setNot] = useState(false);
+        const [nivel, setNivel] = useState("");
     
         const cadastrar = async (e: React.FormEvent) => {
             e.preventDefault();
     
             try{
-                const mensagem = await criarFuncao(nome);
+                const mensagem = await criarFuncao(nome, nivel);
                 
                if(mensagem.msg === "Sucesso"){
                     setNot(true);
@@ -31,11 +32,19 @@ export default function CadastrarFuncao(){
             <h1>Cadastrar funções</h1>
             <div className="card shadow-sm w-75 p-3 mt-5">
                 <form className="row align-items-end g-2" onSubmit={cadastrar} >
-                    <div className="col-md-15">
+                    <div className="col-md-9">
                         <label className="form-label">Nome</label>
                         <input type="text" placeholder="Nome da função" value={nome} onChange={(e) => setNome(e.target.value)} className="form-control"/>
                     </div>                  
-
+                     <div className="col-md-3">
+                        <label className="form-label">Nivel de Experiência</label>
+                        <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="form-select shadow-sm">
+                            <option value="">Nivel</option>
+                            <option value="cerimoniario">Cerimoniário</option>
+                            <option value="intermediario">Intermediário</option>
+                            <option value="novato">Novato</option>
+                        </select>
+                      </div>    
                     {/* botões */}
                     <Link href={'/configuracao/funcao/'} className="btn btn-outline-danger text-black col-md-1 mx-2">Cancelar</Link>
                     <button type="submit" className="btn btn-primary col-md-1 mx-2">Cadastrar</button>

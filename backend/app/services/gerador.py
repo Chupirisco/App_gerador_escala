@@ -10,16 +10,23 @@ from app.models.escala_dia_funcao import EscalaDiaFuncao
 from app.models.escala_resultado import EscalaResultado
 
 # lista de funções e quem pode exercelas
-FUNCOES_PROIBIDAS = {
-    "novato": {"cerimoniario", "librifero", "turiferario"},
-    "intermediario": {"cerimoniario"},
-    "cerimoniario": set()
+ORDEM_NIVEL = {
+    "novato": 1,
+    "intermediario": 2,
+    "cerimoniario": 3
 }
 
-# metodo verificador que checa se o individuo pode exercer aquela função
-def pode_exercer(individuo, funcao_nome: str) -> bool:
-    proibidas = FUNCOES_PROIBIDAS.get(individuo.nivel_ind, set())
-    return funcao_nome.lower() not in proibidas
+def pode_exercer(individuo, funcao) -> bool:
+    """
+    Retorna True se o nível do indivíduo é suficiente
+    para o nível mínimo exigido pela função
+    """
+    return (
+        ORDEM_NIVEL.get(individuo.nivel_ind, 0)
+        >=
+        ORDEM_NIVEL.get(funcao.nivel_fun, 0)
+    )
+
 
 # método inicial, ele chama os outros
 def gerar_escala_mes(
@@ -110,9 +117,11 @@ def escolher_individuo(
         if ontem:
             continue
 
-        # permissões de função
-        if not pode_exercer(ind, cfg.funcao.nome_fun):
+        
+        # permissões de função (baseado no nível)
+        if not pode_exercer(ind, cfg.funcao):
             continue
+
 
         validos.append(ind)
 

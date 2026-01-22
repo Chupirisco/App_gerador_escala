@@ -13,7 +13,10 @@ router = APIRouter(
 # CREATE
 @router.post("/")
 def criar_funcao(funcao: FuncaoCreate, db: Session = Depends(get_db)):
-    nova_funcao = Funcao(nome_fun=funcao.nome_fun)
+    nova_funcao = Funcao(
+        nome_fun=funcao.nome_fun,
+        nivel_fun=funcao.nivel_fun
+        )
     db.add(nova_funcao)
     db.commit()
     db.refresh(nova_funcao)

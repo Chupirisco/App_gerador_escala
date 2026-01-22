@@ -5,19 +5,20 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 
 import Notificacao from "@/components/Notificacao";
-import { Individuo } from "@/model/individuo.model";
+// import { Individuo } from "@/model/individuo.model";
 import { Localidade } from "@/model/localidade.model";
 import { editarIndividuo, buscarIndividuoPorId } from "@/services/api/individuo.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
-import { isNull } from "util";
 
 export default function EditarIndividuo() {
   const { id } = useParams();
 
-  const [individuo, setIndividuo] = useState<Individuo | null>(null);
+  // const [individuo, setIndividuo] = useState<Individuo | null>(null);
   const [nome, setNome] = useState("");
   const [status, setStatus] = useState("ativo");
   const [idLocal, setIdLocal] = useState<number | null>(null);
+  const [nivel, setNivel] = useState("");
+
 
   const [local, setLocal] = useState<Localidade[]>([]);
   const [not, setNot] = useState(false);
@@ -31,9 +32,8 @@ export default function EditarIndividuo() {
     setNome(res.nome);
 
     setStatus(res.status);
+    setNivel(res.nivel)
     setIdLocal(res.id_loc_fk);
-
-    console.log(nome);
   });
 
 }, [id]);
@@ -47,14 +47,14 @@ export default function EditarIndividuo() {
   const editar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nome || !status || idLocal === null || id === null) {
+    if (!nome || !status || idLocal === null || id === null || !nivel) {
       setNotMenssagem("Preencha todos os campos!");
       setNotTipo("erro");
       setNot(true);
       return;
     }
 
-    const mensagem = await editarIndividuo(Number(id), nome, status, idLocal);
+    const mensagem = await editarIndividuo(Number(id), nome, status, nivel, idLocal);
 
     if (mensagem.msg === "Sucesso") {
       setNotMenssagem("Operação realizada com sucesso!");
@@ -80,7 +80,7 @@ export default function EditarIndividuo() {
             />
           </div>
 
-          <div className="col-md-3">
+          <div className="col-md-2">
             <label className="form-label">Status</label>
             <select
               className="form-select"
@@ -91,8 +91,16 @@ export default function EditarIndividuo() {
               <option value="inativo">Inativo</option>
             </select>
           </div>
-
-          <div className="col-md-3">
+            <div className="col-md-2">
+                        <label className="form-label">Experiência</label>
+                        <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="form-select shadow-sm">
+                            <option value="">Nivel</option>
+                            <option value="cerimoniario">Cerimoniário</option>
+                            <option value="intermediario">Intermediário</option>
+                            <option value="novato">Novato</option>
+                        </select>
+                      </div>  
+          <div className="col-md-2">
             <label className="form-label">Local</label>
             <select
               className="form-select"

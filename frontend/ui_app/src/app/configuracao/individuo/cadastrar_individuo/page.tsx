@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 export default function CadastrarIndividuo(){
     const [nome, setNome] = useState("");
     const [status, setStatus] = useState("ativo");
+    const [nivel, setNivel] = useState("");
     const [idLocal, setIdLocal] = useState<number | null>(null);
     const [not, setNot] = useState(false);
     const [notMenssagem, setNotMenssagem] = useState("");
@@ -32,7 +33,7 @@ export default function CadastrarIndividuo(){
     const cadastrar = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!nome || !status || idLocal === null) {
+        if (!nome || !status || idLocal === null || !nivel) {
              setNotMenssagem("Preencha todos os campos!");
              setNotTipo("erro");
              setNot(true);
@@ -40,13 +41,14 @@ export default function CadastrarIndividuo(){
         }
 
         try {
-            const mensagem = await criarIndividuo(nome, status, idLocal);
+            const mensagem = await criarIndividuo(nome, status, nivel , idLocal);
 
             if (mensagem.msg === "Sucesso") {
             setNotMenssagem("Operação realizada com sucesso!");
             setNotTipo("sucesso");
             setNot(true);
             setNome("");
+            setNivel("");
             setStatus("ativo");
             setIdLocal(null);
             }
@@ -72,6 +74,15 @@ export default function CadastrarIndividuo(){
                             <option value="inativo">Inativo</option>
                         </select>
                     </div>    
+                      <div className="col-md-3">
+                        <label className="form-label">Experiência</label>
+                        <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="form-select shadow-sm">
+                            <option value="">Nivel</option>
+                            <option value="cerimoniario">Cerimoniário</option>
+                            <option value="intermediario">Intermediário</option>
+                            <option value="novato">Novato</option>
+                        </select>
+                      </div>    
                     <div className="col-md-3">
                         <label className="form-label">Local</label>
                        <select value={idLocal ?? ""}
