@@ -87,7 +87,6 @@ const filtrar = (e: React.FormEvent) => {
   }
 }, [inativo, individuo]);
 
-
   return (
     <div className="d-flex h-100 w-100 py-5 flex-column align-items-center">
       <h1 className="mb-5">Individuos</h1>
@@ -114,8 +113,6 @@ const filtrar = (e: React.FormEvent) => {
           </form>        
         </div>  
       </div>
-
-       
 
       <div className="table-responsive w-75 shadow-sm table-sm rounded">
         <table className="table table-hover table-bordered align-middle mb-0">
