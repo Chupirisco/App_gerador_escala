@@ -2,20 +2,21 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-/* =========================
-   Tipagem do contexto
-========================= */
+// Tipagem do contexto
+
+// todos os dados que não vão para o bd em relação a criação da escala ficam aqui
+// esses dados armazenados sao temporarios
 type GeracaoEscalaContextType = {
   // dados da tabela escala_dia
   ano: number;
   mes: number;
-  diasSalvos: number[];
+  diasSelecionados: number[];
   id_local: number;
 
   setAno: (ano: number) => void;
   setMes: (mes: number) => void;
   setIdLocal: (id_local: number) => void;
-  setDiasSalvos: (dias: number[]) => void;
+  setDiasSelecionados: (dias: number[]) => void;
 };
 
 // Criação do Context
@@ -36,7 +37,7 @@ export function GeracaoEscalaProvider({
   const [ano, setAno] = useState<number>(hoje.getFullYear());
   const [mes, setMes] = useState<number>(hoje.getMonth() + 1);
   const [id_local, setIdLocal] = useState(0);
-  const [diasSalvos, setDiasSalvos] = useState<number[]>([]);
+  const [diasSelecionados, setDiasSelecionados] = useState<number[]>([]);
 
   return (
     <GeracaoEscalaContext.Provider
@@ -44,12 +45,12 @@ export function GeracaoEscalaProvider({
         ano,
         mes,
         id_local,
-        diasSalvos,
+        diasSelecionados,
         setAno,
         setMes,
         setIdLocal,
 
-        setDiasSalvos,
+        setDiasSelecionados,
       }}
     >
       {children}
