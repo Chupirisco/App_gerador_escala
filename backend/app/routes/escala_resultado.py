@@ -69,7 +69,19 @@ def criar_resultado(
 
 @router.get("/", response_model=list[EscalaResultadoResponse])
 def listar_resultados(db: Session = Depends(get_db)):
-    return db.query(EscalaResultado).all()
+    resultados = db.query(EscalaResultado).all()
+
+    return [
+        {
+            "id_esr": r.id_esr,
+            "funcao": r.funcao.nome_fun,
+            "individuo": r.individuo.nome_ind if r.individuo else None,
+            "data": r.escala_dia.data_esd,
+            "horario": r.escala_dia.horario_esd.strftime("%H:%M")
+        }
+        for r in resultados
+    ]
+
 
 @router.get("/{id}", response_model=EscalaResultadoResponse)
 def buscar_resultado(id: int, db: Session = Depends(get_db)):

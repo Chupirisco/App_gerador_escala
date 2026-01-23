@@ -33,7 +33,7 @@ create table escala_dia(
     data_esd date,
     horario_esd time,
     id_loc_fk int,
-    foreign key (id_loc_fk) references local(id_loc)
+    foreign key (id_loc_fk) references local(id_loc) 
 );
 
 # pega a função e coloca uma quantidade maxima de pessoas escaladas para ela
@@ -43,7 +43,7 @@ create table escala_dia_funcao(
     id_fun_fk int,
     id_esd_fk int,
     foreign key (id_fun_fk) references funcao(id_fun),
-    foreign key (id_esd_fk) references escala_dia(id_esd)    
+    foreign key (id_esd_fk) references escala_dia(id_esd) on delete cascade 
 );
 
 create table escala_resultado(
@@ -51,7 +51,7 @@ create table escala_resultado(
     id_esd_fk int,
     id_fun_fk int,
     id_ind_fk int null,
-    foreign key (id_esd_fk) references escala_dia (id_esd),
+    foreign key (id_esd_fk) references escala_dia (id_esd) on delete cascade,
     foreign key (id_fun_fk) references funcao (id_fun),
     foreign key (id_ind_fk) references individuo (id_ind)
 );
@@ -59,3 +59,8 @@ create table escala_resultado(
 create index idx_indp_individuo_data on indisponibilidade (id_ind_fk, data_indp);
 create index idx_escala_dia_data on escala_dia(data_esd);
 create index idx_resultado_escala on escala_resultado (id_esd_fk);
+
+select * from escala_dia;
+select * from escala_dia_funcao;
+
+select * from escala_resultado;

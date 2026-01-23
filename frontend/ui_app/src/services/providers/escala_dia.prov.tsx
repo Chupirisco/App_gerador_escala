@@ -1,21 +1,32 @@
 "use client";
 
+import { EscalaDia } from "@/model/escala_dia_config.model";
 import { createContext, useContext, useState, ReactNode } from "react";
 
-/* =========================
-   Tipagem do contexto
-========================= */
-type GeracaoEscalaContextType = {
-  // dados da tabela escala_dia
-  ano: number;
-  mes: number;
-  diasSalvos: number[];
-  id_local: number;
+// Tipagem do contexto
 
+// esses dados armazenados sao temporarios
+type GeracaoEscalaContextType = {
+  ano: number;
   setAno: (ano: number) => void;
+
+  mes: number;
   setMes: (mes: number) => void;
-  setIdLocal: (id_local: number) => void;
-  setDiasSalvos: (dias: number[]) => void;
+
+  diasSelecionados: number[];
+  setDiasSelecionados: (dias: number[]) => void;
+
+  diaAtivo: number | null;
+  setDiaAtivo: (dia: number | null) => void;
+
+  escalas: EscalaDia[];
+  setEscalas: React.Dispatch<React.SetStateAction<EscalaDia[]>>;
+
+  escalaAtivaId: string | null;
+  setEscalaAtivaId: (id: string | null) => void;
+
+  escalasDoDia: (dia: number) => EscalaDia[];
+  resetar: () => void;
 };
 
 // Criação do Context
@@ -33,23 +44,49 @@ export function GeracaoEscalaProvider({
 }: GeracaoEscalaProviderProps) {
   const hoje = new Date();
 
-  const [ano, setAno] = useState<number>(hoje.getFullYear());
-  const [mes, setMes] = useState<number>(hoje.getMonth() + 1);
-  const [id_local, setIdLocal] = useState(0);
-  const [diasSalvos, setDiasSalvos] = useState<number[]>([]);
+  const [ano, setAno] = useState(hoje.getFullYear());
+  const [mes, setMes] = useState(hoje.getMonth() + 1);
+
+  const [diasSelecionados, setDiasSelecionados] = useState<number[]>([]);
+  const [diaAtivo, setDiaAtivo] = useState<number | null>(null);
+
+  const [escalas, setEscalas] = useState<EscalaDia[]>([]);
+  const [escalaAtivaId, setEscalaAtivaId] = useState<string | null>(null);
+
+  function escalasDoDia(dia: number) {
+    return escalas.filter((e) => e.dia === dia);
+  }
+
+  function resetar() {
+    setDiasSelecionados([]);
+    setDiaAtivo(null);
+    setEscalas([]);
+    setEscalaAtivaId(null);
+  }
 
   return (
     <GeracaoEscalaContext.Provider
       value={{
         ano,
         mes,
-        id_local,
-        diasSalvos,
         setAno,
         setMes,
-        setIdLocal,
 
-        setDiasSalvos,
+        resetar,
+
+        diasSelecionados,
+        setDiasSelecionados,
+
+        diaAtivo,
+        setDiaAtivo,
+
+        escalas,
+        setEscalas,
+
+        escalaAtivaId,
+        setEscalaAtivaId,
+
+        escalasDoDia,
       }}
     >
       {children}
