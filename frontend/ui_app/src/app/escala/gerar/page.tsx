@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import EscolherData from "./escolher_data";
+import ConfigurarDatas from "./configurar_datas";
 
 export default function Gerar() {
   const hoje = new Date();
@@ -10,20 +11,6 @@ export default function Gerar() {
   const [mes, setMes] = useState(Number(hoje.getMonth() + 1));
 
   const [pagina, setPagina] = useState("dias");
-
-  const verificarPagina = () => {
-    switch (pagina) {
-      case "dias": {
-        return <EscolherData ano={ano!} mes={mes} avancar={setPagina} />;
-      }
-      case "funcao": {
-        return <div></div>;
-      }
-      default: {
-        return <div>Nada consta</div>;
-      }
-    }
-  };
 
   return (
     <div className="d-flex h-100 w-100 py-5 flex-column align-items-center">
@@ -35,7 +22,9 @@ export default function Gerar() {
               <label className="form-label">Ano</label>
               <input
                 type="number"
+                min={2000}
                 className="form-control"
+                disabled={pagina !== "dias"}
                 value={ano ?? ""}
                 onChange={(e) => {
                   setAno(Number(e.target.value));
@@ -49,6 +38,7 @@ export default function Gerar() {
                 type="number"
                 min={1}
                 max={12}
+                disabled={pagina !== "dias"}
                 className="form-control"
                 value={mes ?? ""}
                 onChange={(e) => {
@@ -58,7 +48,12 @@ export default function Gerar() {
             </div>
           </div>
         </div>
-        {verificarPagina()}
+
+        {pagina === "dias" && (
+          <EscolherData ano={ano!} mes={mes} avancar={setPagina} />
+        )}
+
+        {pagina === "funcao" && <ConfigurarDatas acao={setPagina} />}
       </div>
     </div>
   );
