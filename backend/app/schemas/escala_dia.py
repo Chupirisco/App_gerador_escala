@@ -1,19 +1,16 @@
 from datetime import date, time
+from typing import List
 from pydantic import BaseModel
 
+# Schema já existente
+class EscalaDiaFuncaoCreate(BaseModel):
+    quantidade: int
+    id_fun_fk: int
+    id_esd_fk: int  # no momento de criar, ainda não temos o id_esd, vamos ignorar no front
 
-class EscalaDiaBase(BaseModel):
+# Novo schema para receber junto com a escala
+class EscalaDiaCreateWithFuncoes(BaseModel):
     data_esd: date
     horario_esd: time
     id_loc_fk: int
-
-
-class EscalaDiaCreate(EscalaDiaBase):
-    pass
-
-
-class EscalaDiaResponse(EscalaDiaBase):
-    id_esd: int
-
-    class Config:
-        from_attributes = True
+    funcoes: List[EscalaDiaFuncaoCreate]

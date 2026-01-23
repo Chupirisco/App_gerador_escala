@@ -3,12 +3,10 @@
 import { useState } from "react";
 import EscolherData from "./escolher_data";
 import ConfigurarDatas from "./configurar_datas";
+import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 
 export default function Gerar() {
-  const hoje = new Date();
-
-  const [ano, setAno] = useState<number | null>(Number(hoje.getFullYear()));
-  const [mes, setMes] = useState(Number(hoje.getMonth() + 1));
+  const { mes, ano, setMes, setAno } = useGeracaoEscala();
 
   const [pagina, setPagina] = useState("dias");
 

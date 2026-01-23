@@ -13,7 +13,14 @@ import { EscalaDia } from "@/model/escala_dia_config.model";
 
 export default function ModalConfigurarDia() {
   // vem do provider
-  const { diaAtivo, setDiaAtivo, escalas, setEscalas } = useGeracaoEscala();
+  const {
+    diaAtivo,
+    setDiaAtivo,
+    escalas,
+    setEscalas,
+    setEscalaAtivaId,
+    escalaAtivaId,
+  } = useGeracaoEscala();
 
   // useStates locais para popular as listas e selects
   const [local, setLocal] = useState<Localidade[]>([]);
@@ -30,7 +37,7 @@ export default function ModalConfigurarDia() {
 
   //usereffec verifica se o dia selecionado ja tem algum cadastro no provider
   useEffect(() => {
-    const diaSalvo = escalas.find((d) => d.dia === diaAtivo);
+    const diaSalvo = escalas.find((d) => d.id === escalaAtivaId);
 
     if (!diaSalvo) {
       // reset (novo dia)
@@ -103,18 +110,20 @@ export default function ModalConfigurarDia() {
 
   // função final que salva a lista no provider
   function salvarDia(diaConfig: EscalaDia) {
-    if (!localSelecionado || funcoesConfiguradas.length === 0) {
-      alert("Selecione o local e ao menos uma função");
+    if (!diaConfig.localId || diaConfig.funcoes.length === 0) {
+      // Aparecer notificação aqui !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       return;
     }
 
     setEscalas((prev) => {
-      const existe = prev.some((d) => d.dia === diaConfig.dia);
+      const existe = prev.some((e) => e.id === diaConfig.id);
 
+      // edição
       if (existe) {
-        return prev.map((d) => (d.dia === diaConfig.dia ? diaConfig : d));
+        return prev.map((e) => (e.id === diaConfig.id ? diaConfig : e));
       }
 
+      // nova escala (mesmo dia pode ter várias!)
       return [...prev, diaConfig];
     });
   }
@@ -256,7 +265,9 @@ export default function ModalConfigurarDia() {
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
-                onClick={() => setDiaAtivo(null)}
+                onClick={() => {
+                  setEscalaAtivaId(null);
+                }}
               >
                 Cancelar
               </button>
@@ -274,8 +285,7 @@ export default function ModalConfigurarDia() {
                       throw new Error("Function not implemented.");
                     },
                   });
-
-                  setDiaAtivo(null);
+                  setEscalaAtivaId(null);
                 }}
               >
                 Salvar

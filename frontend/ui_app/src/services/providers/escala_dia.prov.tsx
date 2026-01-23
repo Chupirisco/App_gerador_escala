@@ -26,6 +26,7 @@ type GeracaoEscalaContextType = {
   setEscalaAtivaId: (id: string | null) => void;
 
   escalasDoDia: (dia: number) => EscalaDia[];
+  resetar: () => void;
 };
 
 // Criação do Context
@@ -56,6 +57,13 @@ export function GeracaoEscalaProvider({
     return escalas.filter((e) => e.dia === dia);
   }
 
+  function resetar() {
+    setDiasSelecionados([]);
+    setDiaAtivo(null);
+    setEscalas([]);
+    setEscalaAtivaId(null);
+  }
+
   return (
     <GeracaoEscalaContext.Provider
       value={{
@@ -63,6 +71,8 @@ export function GeracaoEscalaProvider({
         mes,
         setAno,
         setMes,
+
+        resetar,
 
         diasSelecionados,
         setDiasSelecionados,

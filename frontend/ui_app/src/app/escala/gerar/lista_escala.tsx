@@ -7,7 +7,7 @@ import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 import { useEffect, useState } from "react";
 
 export default function ListaEscalasDia() {
-  const { diaAtivo, escalasDoDia, setEscalaAtivaId, setDiaAtivo } =
+  const { diaAtivo, escalasDoDia, setEscalaAtivaId, escalaAtivaId } =
     useGeracaoEscala();
 
   const [locais, setLocais] = useState<Localidade[]>([]);
@@ -18,59 +18,71 @@ export default function ListaEscalasDia() {
       .catch((err) => console.error("deu ruim", err));
   }, []);
 
-  const escalas = escalasDoDia(diaAtivo!);
+  if (!diaAtivo) return null;
+
+  const escalas = escalasDoDia(diaAtivo);
 
   return (
     <div className="card mt-3">
-      <h1>Esta tela</h1>
-      <div className="card-header d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">Escalas do dia {diaAtivo}</h5>
-
-        <button
-          className="btn btn-sm btn-primary"
-          onClick={() => setEscalaAtivaId("nova")}
-        >
-          + Nova escala
-        </button>
-      </div>
-
+      {/* Modal */}
+      {escalaAtivaId && <ModalConfigurarDia />}
       <div className="card-body">
-        {escalas.length === 0 && (
-          <div className="text-muted text-center">
-            Nenhuma escala cadastrada
+        <div className="row g-2">
+          {/* Card Nova Escala */}
+          <div className="col-12 col-md-6 col-lg-2">
+            <div
+              className="card h-100 border-primary text-primary text-center cursor-pointer"
+              role="button"
+              onClick={() => setEscalaAtivaId("nova")}
+            >
+              <div className="card-body d-flex align-items-center justify-content-center">
+                <strong>+ Nova escala</strong>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="list-group">
+          {/* Cards das escalas */}
           {escalas.map((escala) => {
             const local = locais.find((l) => l.id === escala.localId);
 
             return (
-              <button
-                key={escala.id}
-                className="list-group-item list-group-item-action d-flex justify-content-between"
-                onClick={() => setEscalaAtivaId(escala.id)}
-              >
-                <span>
-                  {local?.nome ?? "Local não encontrado"} — {escala.horario}
-                </span>
+              <div key={escala.id} className="col-12 col-md-6 col-lg-3">
+                <div
+                  className="card h-100 cursor-pointer"
+                  role="button"
+                  onClick={() => setEscalaAtivaId(escala.id)}
+                >
+                  <div className="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 className="card-title mb-1">
+                        {local?.nome ?? "Local não encontrado"}
+                      </h6>
 
-                <span className="badge bg-success">
-                  {escala.funcoes.length} funções
-                </span>
-              </button>
+                      <small className="text-muted">
+                        Horário: {escala.horario}
+                      </small>
+
+                      <div className="mt-2">
+                        <span className="badge bg-success">
+                          {escala.funcoes.length} funções
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      className="btn btn-sm btn-danger ms-2"
+                      type="button"
+                      onClick={() => {}}
+                    >
+                      <i className="bi bi-trash-fill text-white"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
-
-      <div className="card-footer d-flex justify-content-between">
-        <button className="btn btn-secondary" onClick={() => setDiaAtivo(null)}>
-          Voltar
-        </button>
-      </div>
-
-      <ModalConfigurarDia />
     </div>
   );
 }
