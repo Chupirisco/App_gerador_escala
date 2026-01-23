@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class EscalaDiaFuncaoBase(BaseModel):
     quantidade: int
     id_fun_fk: int
-    id_esd_fk: int
 
 
 class EscalaDiaFuncaoCreate(EscalaDiaFuncaoBase):

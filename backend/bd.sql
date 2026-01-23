@@ -59,3 +59,4 @@ create table escala_resultado(
 create index idx_indp_individuo_data on indisponibilidade (id_ind_fk, data_indp);
 create index idx_escala_dia_data on escala_dia(data_esd);
 create index idx_resultado_escala on escala_resultado (id_esd_fk);
+
