@@ -45,6 +45,54 @@ def gerar_escala_mes(
 
     db.commit()
 
+def candidatos_por_prioridade(
+    db: Session,
+    cfg: EscalaDiaFuncao,
+    data_atual,
+    data_anterior,
+    escalados_hoje: set
+):
+    individuos = db.query(Individuo).filter(
+        Individuo.status_ind == "ativo"
+    ).all()
+
+    candidatos = []
+
+    nivel_fun = ORDEM_NIVEL.get(cfg.funcao.nivel_fun, 0)
+
+    for ind in individuos:
+        if ind.id_ind in escalados_hoje:
+            continue
+
+        # indisponível
+        if db.query(Indisponibilidade).filter(
+            Indisponibilidade.id_ind_fk == ind.id_ind,
+            Indisponibilidade.data_indp == data_atual
+        ).first():
+            continue
+
+        # ontem
+        if db.query(EscalaResultado).join(EscalaDia).filter(
+            EscalaResultado.id_ind_fk == ind.id_ind,
+            EscalaDia.data_esd == data_anterior
+        ).first():
+            continue
+
+        nivel_ind = ORDEM_NIVEL.get(ind.nivel_ind, 0)
+
+        # nunca abaixo do nível da função
+        if nivel_ind < nivel_fun:
+            continue
+
+        # prioridade: quanto mais próximo do nível da função, melhor
+        prioridade = nivel_ind - nivel_fun
+
+        candidatos.append((ind, prioridade))
+
+    # ordena por prioridade (0 = ideal, 1 = acima, 2 = bem acima...)
+    candidatos.sort(key=lambda x: x[1])
+
+    return candidatos
 
 
 # parte que faz as verificações do dia
@@ -89,48 +137,26 @@ def escolher_individuo(
     data_anterior,
     escalados_hoje: set
 ):
-    # base de indivíduos ativos
-    individuos = db.query(Individuo).filter(
-        Individuo.status_ind == "ativo"
-    ).all()
+    candidatos = candidatos_por_prioridade(
+        db,
+        cfg,
+        data_atual,
+        data_anterior,
+        escalados_hoje
+    )
 
-    validos = []
-
-    for ind in individuos:
-        # já escalado hoje
-        if ind.id_ind in escalados_hoje:
-            continue
-
-        # indisponível no dia
-        indisponivel = db.query(Indisponibilidade).filter(
-            Indisponibilidade.id_ind_fk == ind.id_ind,
-            Indisponibilidade.data_indp == data_atual
-        ).first()
-        if indisponivel:
-            continue
-
-        # escalado no dia anterior
-        ontem = db.query(EscalaResultado).join(EscalaDia).filter(
-            EscalaResultado.id_ind_fk == ind.id_ind,
-            EscalaDia.data_esd == data_anterior
-        ).first()
-        if ontem:
-            continue
-
-        
-        # permissões de função (baseado no nível)
-        if not pode_exercer(ind, cfg.funcao):
-            continue
-
-
-        validos.append(ind)
-
-    if not validos:
+    if not candidatos:
         return None
 
-    # justiça: quem serviu menos no mês
+    # pega apenas os de maior prioridade (menor diferença)
+    melhor_prioridade = candidatos[0][1]
+    mais_adequados = [
+        ind for ind, p in candidatos if p == melhor_prioridade
+    ]
+
+    # justiça mensal (o que você já fazia)
     contagem = []
-    for ind in validos:
+    for ind in mais_adequados:
         qtd = db.query(EscalaResultado).join(EscalaDia).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             func.month(EscalaDia.data_esd) == data_atual.month

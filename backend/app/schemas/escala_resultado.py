@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 from pydantic import BaseModel
 
@@ -12,8 +13,13 @@ class EscalaResultadoCreate(EscalaResultadoBase):
     pass
 
 
-class EscalaResultadoResponse(EscalaResultadoBase):
+class EscalaResultadoResponse(BaseModel):
     id_esr: int
+
+    funcao: str
+    individuo: str | None
+    data: date
+    horario: str
 
     class Config:
         from_attributes = True

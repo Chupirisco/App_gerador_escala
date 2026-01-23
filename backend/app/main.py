@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import escala_dia, escala_dia_funcao, gerador, indisponibilidade, local, funcao, individuo
+from app.routes import escala_dia, escala_dia_funcao, escala_resultado, gerador, indisponibilidade, local, funcao, individuo
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -19,6 +19,7 @@ app.include_router(individuo.router)
 app.include_router(indisponibilidade.router)
 app.include_router(escala_dia.router)
 app.include_router(escala_dia_funcao.router)
+app.include_router(escala_resultado.router)
 app.include_router(gerador.router)
 
 @app.get("/")

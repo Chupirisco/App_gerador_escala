@@ -1,7 +1,7 @@
 import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 import { Dispatch, JSX, SetStateAction } from "react";
 import ListaEscalasDia from "./lista_escala";
-import { cadastrarDias } from "@/services/api/escala.rep";
+import { cadastrarDias, criarEscala } from "@/services/api/escala.rep";
 
 type ConfigurarDatasProps = {
   acao: Dispatch<SetStateAction<string>>;
@@ -94,7 +94,7 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
     }
 
     cadastrarDias(escalas, ano, mes);
-
+    criarEscala(mes, ano);
     // Se passou na verificação, avança
     acao("funcao");
   }
