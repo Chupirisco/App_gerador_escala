@@ -9,32 +9,25 @@ from app.models.escala_dia import EscalaDia
 from app.models.escala_dia_funcao import EscalaDiaFuncao
 from app.models.escala_resultado import EscalaResultado
 
-# lista de funções e quem pode exercelas
-ORDEM_NIVEL = {
+# ====================
+# Níveis padronizados
+# ====================
+# novato < intermediario < experiente
+NIVEL_PADRAO = {
     "novato": 1,
     "intermediario": 2,
-    "cerimoniario": 3
+    "experiente": 3
 }
 
 def pode_exercer(individuo, funcao) -> bool:
-    """
-    Retorna True se o nível do indivíduo é suficiente
-    para o nível mínimo exigido pela função
-    """
-    return (
-        ORDEM_NIVEL.get(individuo.nivel_ind, 0)
-        >=
-        ORDEM_NIVEL.get(funcao.nivel_fun, 0)
-    )
+    """Verifica se o indivíduo possui nível suficiente para a função"""
+    return NIVEL_PADRAO.get(individuo.nivel_ind, 0) >= NIVEL_PADRAO.get(funcao.nivel_fun, 0)
 
-
-# método inicial, ele chama os outros
-def gerar_escala_mes(
-    db: Session,
-    mes: int,
-    ano: int
-):
-    # buscar todas as escalas do mês
+# ====================
+# Geração da escala do mês
+# ====================
+def gerar_escala_mes(db: Session, mes: int, ano: int):
+    """Percorre todas as escalas do mês e gera cada dia"""
     escalas = db.query(EscalaDia).filter(
         func.month(EscalaDia.data_esd) == mes,
         func.year(EscalaDia.data_esd) == ano
@@ -45,78 +38,24 @@ def gerar_escala_mes(
 
     db.commit()
 
-def candidatos_por_prioridade(
-    db: Session,
-    cfg: EscalaDiaFuncao,
-    data_atual,
-    data_anterior,
-    escalados_hoje: set
-):
-    individuos = db.query(Individuo).filter(
-        Individuo.status_ind == "ativo"
-    ).all()
-
-    candidatos = []
-
-    nivel_fun = ORDEM_NIVEL.get(cfg.funcao.nivel_fun, 0)
-
-    for ind in individuos:
-        if ind.id_ind in escalados_hoje:
-            continue
-
-        # indisponível
-        if db.query(Indisponibilidade).filter(
-            Indisponibilidade.id_ind_fk == ind.id_ind,
-            Indisponibilidade.data_indp == data_atual
-        ).first():
-            continue
-
-        # ontem
-        if db.query(EscalaResultado).join(EscalaDia).filter(
-            EscalaResultado.id_ind_fk == ind.id_ind,
-            EscalaDia.data_esd == data_anterior
-        ).first():
-            continue
-
-        nivel_ind = ORDEM_NIVEL.get(ind.nivel_ind, 0)
-
-        # nunca abaixo do nível da função
-        if nivel_ind < nivel_fun:
-            continue
-
-        # prioridade: quanto mais próximo do nível da função, melhor
-        prioridade = nivel_ind - nivel_fun
-
-        candidatos.append((ind, prioridade))
-
-    # ordena por prioridade (0 = ideal, 1 = acima, 2 = bem acima...)
-    candidatos.sort(key=lambda x: x[1])
-
-    return candidatos
-
-
-# parte que faz as verificações do dia
+# ====================
+# Geração da escala de um dia
+# ====================
 def gerar_escala_dia(db: Session, escala: EscalaDia):
+    """Gera os indivíduos para todas as funções de um dia"""
     data_atual = escala.data_esd
     data_anterior = data_atual - timedelta(days=1)
 
-    configuracoes = (
-        db.query(EscalaDiaFuncao)
-        .filter(EscalaDiaFuncao.id_esd_fk == escala.id_esd)
-        .all()
-    )
+    configuracoes = db.query(EscalaDiaFuncao).filter(
+        EscalaDiaFuncao.id_esd_fk == escala.id_esd
+    ).all()
 
+    # Controla quem já foi escalado hoje para evitar duplicidade
     escalados_hoje = set()
 
     for cfg in configuracoes:
         for _ in range(cfg.quantidade):
-            candidato = escolher_individuo(
-                db,
-                cfg,
-                data_atual,
-                data_anterior,
-                escalados_hoje
-            )
+            candidato = escolher_individuo(db, cfg, data_atual, data_anterior, escalados_hoje)
 
             resultado = EscalaResultado(
                 id_esd_fk=escala.id_esd,
@@ -129,7 +68,9 @@ def gerar_escala_dia(db: Session, escala: EscalaDia):
 
             db.add(resultado)
 
-#distribui os individuos nas funções disponiveis para aquele dia
+# ====================
+# Escolher indivíduo para uma função
+# ====================
 def escolher_individuo(
     db: Session,
     cfg: EscalaDiaFuncao,
@@ -137,47 +78,44 @@ def escolher_individuo(
     data_anterior,
     escalados_hoje: set
 ):
-    # pega todos os indivíduos ativos
-    individuos = db.query(Individuo).filter(
-        Individuo.status_ind == "ativo"
-    ).all()
+    """Seleciona o indivíduo mais justo para a função do dia"""
+    # Todos os ativos
+    individuos = db.query(Individuo).filter(Individuo.status_ind == "ativo").all()
+    candidatos = []
 
-    pontuacoes = []
+    nivel_fun = NIVEL_PADRAO.get(cfg.funcao.nivel_fun, 0)
 
-    nivel_fun = ORDEM_NIVEL.get(cfg.funcao.nivel_fun, 0)
-
+    # Avalia cada indivíduo
     for ind in individuos:
-        # já escalado hoje
-        if ind.id_ind in escalados_hoje:
-            continue
+        nivel_ind = NIVEL_PADRAO.get(ind.nivel_ind, 0)
 
-        # indisponível no dia
+        # Filtragens iniciais
+        if ind.id_ind in escalados_hoje:
+            continue  # já escalado hoje
+        if nivel_ind < nivel_fun:
+            continue  # nível insuficiente
         if db.query(Indisponibilidade).filter(
             Indisponibilidade.id_ind_fk == ind.id_ind,
             Indisponibilidade.data_indp == data_atual
         ).first():
-            continue
-
-        # já escalado ontem
+            continue  # indisponível
         if db.query(EscalaResultado).join(EscalaDia).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             EscalaDia.data_esd == data_anterior
         ).first():
-            continue
+            continue  # já serviu ontem
 
-        # nível insuficiente
-        nivel_ind = ORDEM_NIVEL.get(ind.nivel_ind, 0)
-        if nivel_ind < nivel_fun:
-            continue
-
-        # quantas vezes serviu no mês
+        # ====================
+        # Score de justiça
+        # ====================
+        # Quantas vezes serviu no mês
         qtd_mes = db.query(EscalaResultado).join(EscalaDia).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             func.month(EscalaDia.data_esd) == data_atual.month,
             func.year(EscalaDia.data_esd) == data_atual.year
         ).count()
 
-        # última vez que serviu
+        # Dias desde última escala
         ultima = db.query(EscalaDia.data_esd).join(EscalaResultado).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             EscalaDia.data_esd < data_atual
@@ -185,19 +123,26 @@ def escolher_individuo(
 
         dias_desde = (data_atual - ultima[0]).days if ultima else 999
 
-        # score de justiça (quanto menor, melhor)
-        score = (qtd_mes * 10) - dias_desde
+        # Score: menor é melhor
+        # penaliza quem já serviu muitas vezes e dá prioridade a quem está no nível ideal
+        score = (qtd_mes * 10) - dias_desde + (nivel_ind - nivel_fun) * 5
 
-        pontuacoes.append((ind, score))
+        candidatos.append((ind, score))
 
-    if not pontuacoes:
+    # Se não houver candidatos ideais, adiciona qualquer indivíduo que possa exercer
+    if not candidatos:
+        for ind in individuos:
+            if NIVEL_PADRAO.get(ind.nivel_ind, 0) >= nivel_fun:
+                candidatos.append((ind, 999))  # score alto = menos ideal
+
+    if not candidatos:
         return None
 
-    # pega apenas os com menor score
-    menor_score = min(score for _, score in pontuacoes)
-    mais_justos = [ind for ind, score in pontuacoes if score == menor_score]
+    # Seleciona os mais justos
+    menor_score = min(score for _, score in candidatos)
+    mais_justos = [ind for ind, score in candidatos if score == menor_score]
 
-    # escolhe aleatoriamente entre os mais justos
-    return random.choice(mais_justos)
+    # Escolhe aleatoriamente entre os mais justos
+    escolhido = random.choice(mais_justos)
 
-
+    return escolhido

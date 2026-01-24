@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -7,7 +7,10 @@ import Link from "next/link";
 import Notificacao from "@/components/Notificacao";
 // import { Individuo } from "@/model/individuo.model";
 import { Localidade } from "@/model/localidade.model";
-import { editarIndividuo, buscarIndividuoPorId } from "@/services/api/individuo.rep";
+import {
+  editarIndividuo,
+  buscarIndividuoPorId,
+} from "@/services/api/individuo.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
 
 export default function EditarIndividuo() {
@@ -19,25 +22,22 @@ export default function EditarIndividuo() {
   const [idLocal, setIdLocal] = useState<number | null>(null);
   const [nivel, setNivel] = useState("");
 
-
   const [local, setLocal] = useState<Localidade[]>([]);
   const [not, setNot] = useState(false);
   const [notMenssagem, setNotMenssagem] = useState("");
   const [notTipo, setNotTipo] = useState("");
 
- useEffect(() => {
-  if (!id) return;
+  useEffect(() => {
+    if (!id) return;
 
-  buscarIndividuoPorId(Number(id)).then((res) => {
-    setNome(res.nome);
+    buscarIndividuoPorId(Number(id)).then((res) => {
+      setNome(res.nome);
 
-    setStatus(res.status);
-    setNivel(res.nivel)
-    setIdLocal(res.id_loc_fk);
-  });
-
-}, [id]);
-
+      setStatus(res.status);
+      setNivel(res.nivel);
+      setIdLocal(res.id_loc_fk);
+    });
+  }, [id]);
 
   /* Lista localidades */
   useEffect(() => {
@@ -54,7 +54,13 @@ export default function EditarIndividuo() {
       return;
     }
 
-    const mensagem = await editarIndividuo(Number(id), nome, status, nivel, idLocal);
+    const mensagem = await editarIndividuo(
+      Number(id),
+      nome,
+      status,
+      nivel,
+      idLocal,
+    );
 
     if (mensagem.msg === "Sucesso") {
       setNotMenssagem("Operação realizada com sucesso!");
@@ -62,8 +68,6 @@ export default function EditarIndividuo() {
       setNot(true);
     }
   };
-
-
 
   return (
     <div className="w-100 d-flex align-items-center flex-column my-5">
@@ -91,15 +95,19 @@ export default function EditarIndividuo() {
               <option value="inativo">Inativo</option>
             </select>
           </div>
-            <div className="col-md-2">
-                        <label className="form-label">Experiência</label>
-                        <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="form-select shadow-sm">
-                            <option value="">Nivel</option>
-                            <option value="cerimoniario">Cerimoniário</option>
-                            <option value="intermediario">Intermediário</option>
-                            <option value="novato">Novato</option>
-                        </select>
-                      </div>  
+          <div className="col-md-2">
+            <label className="form-label">Experiência</label>
+            <select
+              value={nivel}
+              onChange={(e) => setNivel(e.target.value)}
+              className="form-select shadow-sm"
+            >
+              <option value="">Nivel</option>
+              <option value="experiente">Experiente</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="novato">Novato</option>
+            </select>
+          </div>
           <div className="col-md-2">
             <label className="form-label">Local</label>
             <select
@@ -125,9 +133,7 @@ export default function EditarIndividuo() {
             Cancelar
           </Link>
 
-          <button className="btn btn-primary col-md-1 mx-2">
-            Salvar
-          </button>
+          <button className="btn btn-primary col-md-1 mx-2">Salvar</button>
         </form>
       </div>
 
