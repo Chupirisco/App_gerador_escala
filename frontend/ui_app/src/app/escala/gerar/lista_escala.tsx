@@ -1,16 +1,25 @@
 "use client";
 
 import ModalConfigurarDia from "@/components/ModalConfiguracao";
+import ModalConfirmacao from "@/components/ModalConfirmacao";
 import { Localidade } from "@/model/localidade.model";
 import { listarLocalidade } from "@/services/api/localidade.rep";
 import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 import { useEffect, useState } from "react";
 
 export default function ListaEscalasDia() {
-  const { diaAtivo, escalasDoDia, setEscalaAtivaId, escalaAtivaId } =
-    useGeracaoEscala();
+  const {
+    diaAtivo,
+    escalasDoDia,
+    setEscalaAtivaId,
+    escalaAtivaId,
+    removerEscala,
+  } = useGeracaoEscala();
 
   const [locais, setLocais] = useState<Localidade[]>([]);
+
+  const [modalConf, setModalConf] = useState(false);
+  const [id, setId] = useState("");
 
   useEffect(() => {
     listarLocalidade()
@@ -72,7 +81,11 @@ export default function ListaEscalasDia() {
                     <button
                       className="btn btn-sm btn-danger ms-2"
                       type="button"
-                      onClick={() => {}}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setId(escala.id);
+                        setModalConf(true);
+                      }}
                     >
                       <i className="bi bi-trash-fill text-white"></i>
                     </button>
@@ -83,6 +96,13 @@ export default function ListaEscalasDia() {
           })}
         </div>
       </div>
+      {modalConf && (
+        <ModalConfirmacao
+          mensagem="Deseja realmente excluir este registro?"
+          onConfirmar={() => removerEscala(id)}
+          onCancelar={() => setModalConf(false)}
+        />
+      )}
     </div>
   );
 }

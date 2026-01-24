@@ -74,6 +74,7 @@ def historico(db: Session = Depends(get_db)):
             "data": e.data_esd,
             "horario": e.horario_esd,
             "local": e.local.nome_loc if e.local else None,
+            "id_loc": e.id_loc_fk,
             "resultados": [
                 {
                     "id_esr": r.id_esr,
@@ -85,6 +86,40 @@ def historico(db: Session = Depends(get_db)):
         }
         for e in escalas
     ]
+
+@router.get("/historico/{id}")
+def buscar_escala_por_id(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    escala = (
+        db.query(EscalaDia)
+        .filter(EscalaDia.id_esd == id)
+        .first()
+    )
+
+    if not escala:
+        raise HTTPException(
+            status_code=404,
+            detail="Escala não encontrada"
+        )
+
+    return {
+        "id_esd": escala.id_esd,
+        "data": escala.data_esd,
+        "horario": escala.horario_esd,
+        "local": escala.local.nome_loc if escala.local else None,
+        "id_loc": escala.id_loc_fk,
+        "resultados": [
+            {
+                "id_esr": r.id_esr,
+                "funcao": r.funcao.nome_fun,
+                "individuo": r.individuo.nome_ind if r.individuo else None
+            }
+            for r in escala.resultados
+        ]
+    }
+
 
 @router.delete("/{id_esd}")
 def deletar_escala_dia(
@@ -104,4 +139,4 @@ def deletar_escala_dia(
     db.delete(escala)
     db.commit()
 
-    return {"msg": "Escala removida com sucesso"}
+    return {"msg": "Sucesso"}

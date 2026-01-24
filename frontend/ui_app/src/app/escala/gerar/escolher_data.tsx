@@ -1,3 +1,6 @@
+"use client";
+
+import Notificacao from "@/components/Notificacao";
 import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
@@ -16,6 +19,10 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
 
   const [diasNovos, setDiasNovos] = useState<number[]>([]);
   const [diasRemovidos, setDiasRemovidos] = useState<number[]>([]);
+
+  const [not, setNot] = useState(false);
+  const [notMenssagem, setNotMenssagem] = useState("");
+  const [notTipo, setNotTipo] = useState("");
 
   const { diasSelecionados, setDiasSelecionados } = useGeracaoEscala();
 
@@ -39,7 +46,6 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
       return;
     }
 
-    // Dia novo → marcar/desmarcar normalmente
     setDiasNovos((prev: number[]) =>
       prev.includes(dia) ? prev.filter((d) => d !== dia) : [...prev, dia],
     );
@@ -97,6 +103,13 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
   }
 
   function aplicarAlteracoes() {
+    if (diasNovos.length === 0) {
+      setNotMenssagem("Nenhum dia selecionado!");
+      setNotTipo("erro");
+      setNot(true);
+      return;
+    }
+
     const novosDias = diasSelecionados
       .filter((dia) => !diasRemovidos.includes(dia))
       .concat(diasNovos)
@@ -105,6 +118,10 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
     setDiasSelecionados(novosDias);
     setDiasNovos([]);
     setDiasRemovidos([]);
+
+    setNotMenssagem("Salvo!");
+    setNotTipo("sucesso");
+    setNot(true);
 
     avancar("funcao");
   }
@@ -132,6 +149,15 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
           Avançar
         </button>
       </div>
+      {not && (
+        <div className="position-fixed end-0 bottom-0 p-3">
+          <Notificacao
+            mensagem={notMenssagem}
+            onClose={() => setNot(false)}
+            type={notTipo}
+          ></Notificacao>
+        </div>
+      )}
     </div>
   );
 }

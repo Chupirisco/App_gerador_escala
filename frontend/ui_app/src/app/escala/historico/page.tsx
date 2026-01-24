@@ -1,34 +1,36 @@
 "use client";
+import ModalConfirmacao from "@/components/ModalConfirmacao";
 import { HistoricoEscala } from "@/model/escala_resultado";
 import { Localidade } from "@/model/localidade.model";
-import {
-  buscarHistorico,
-  buscarResultados,
-  excluirEscalaDia,
-} from "@/services/api/escala.rep";
+import { buscarHistorico, excluirEscalaDia } from "@/services/api/escala.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
 import Link from "next/link";
-import {
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-  useEffect,
-  useState,
-} from "react";
+import { useRouter } from "next/navigation";
+
+import { useEffect, useState } from "react";
 
 export default function Page() {
-  const [resultados, setResultados] = useState<HistoricoEscala[]>([]);
+  const router = useRouter();
+
+  const [resultados, setResultados] = useState<HistoricoEscala[]>([]); // original
+  const [resultadosFiltrados, setResultadosFiltrados] = useState<
+    HistoricoEscala[]
+  >([]);
 
   const [filtroLocal, setFiltroLocal] = useState<number | null>(0);
-  const [filtroData, setFiltroData] = useState("");
+  const [filtroDia, setFiltroDia] = useState<number | null>(null);
+  const [filtroMes, setFiltroMes] = useState<number | null>(null);
+  const [filtroAno, setFiltroAno] = useState<number | null>(null);
 
   const [local, setLocal] = useState<Localidade[]>([]);
+
+  const [modalConf, setModalConf] = useState(false);
+  const [id, setId] = useState<number | null>(null);
 
   useEffect(() => {
     buscarHistorico().then((res) => {
       setResultados(res);
+      setResultadosFiltrados(res);
     });
 
     listarLocalidade().then((res) => {
@@ -38,17 +40,35 @@ export default function Page() {
 
   const filtrar = (e: React.FormEvent) => {
     e.preventDefault();
+
+    let filtrado = [...resultados];
+
+    if (filtroLocal && filtroLocal !== 0) {
+      filtrado = filtrado.filter((e) => e.id_loc === filtroLocal);
+    }
+
+    filtrado = filtrado.filter((escala) => {
+      const [ano, mes, dia] = escala.data.split("-").map(Number);
+
+      if (filtroAno && ano !== filtroAno) return false;
+      if (filtroMes && mes !== filtroMes) return false;
+      if (filtroDia && dia !== filtroDia) return false;
+
+      return true;
+    });
+
+    setResultadosFiltrados(filtrado);
   };
 
-  const excluir = async (id: number) => {
-    const confirmar = confirm("Tem certeza que deseja excluir esta escala?");
-    if (!confirmar) return;
-
+  const excluir = async () => {
     try {
-      await excluirEscalaDia(id);
+      await excluirEscalaDia(id!);
 
-      // remove do estado (sem recarregar a página)
       setResultados((prev) => prev.filter((escala) => escala.id_esd !== id));
+
+      setResultadosFiltrados((prev) =>
+        prev.filter((escala) => escala.id_esd !== id),
+      );
     } catch (err) {
       alert("Erro ao excluir a escala");
     }
@@ -61,14 +81,14 @@ export default function Page() {
         <div className="card-body">
           <h3>Filtros</h3>
           <form className="row g-2 align-items-end" onSubmit={filtrar}>
-            <div className="col-md-3">
+            <div className="col-md-2">
               <label className="form-label">Local</label>
               <select
                 className="form-select shadow-sm"
                 value={filtroLocal!}
                 onChange={(e) => setFiltroLocal(Number(e.target.value))}
               >
-                <option>Escolha</option>
+                <option value={""}>Escolha</option>
                 {local.map((loc) => (
                   <option key={loc.id} value={loc.id}>
                     {loc.nome}
@@ -77,16 +97,47 @@ export default function Page() {
               </select>
             </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Data</label>
+            <div className="col-md-2">
+              <label className="form-label">Dia</label>
               <input
-                type="date"
-                value={filtroData}
+                type="number"
+                min={1}
+                max={31}
                 className="form-control shadow-sm"
-                onChange={(e) => setFiltroData(e.target.value)}
+                onChange={(e) =>
+                  setFiltroDia(e.target.value ? Number(e.target.value) : null)
+                }
               />
             </div>
-            <button type="submit" className="btn btn-primary col-md-1">
+            <div className="col-md-3">
+              <label className="form-label">Mês</label>
+              <select
+                className="form-select shadow-sm"
+                onChange={(e) =>
+                  setFiltroMes(e.target.value ? Number(e.target.value) : null)
+                }
+              >
+                <option value="">Todos</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Ano</label>
+              <input
+                type="number"
+                className="form-control shadow-sm"
+                placeholder="Ex: 2026"
+                onChange={(e) =>
+                  setFiltroAno(e.target.value ? Number(e.target.value) : null)
+                }
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary col-md-2">
               Filtrar
             </button>
           </form>
@@ -94,9 +145,17 @@ export default function Page() {
       </div>
 
       <div className="row g-3 w-75">
-        {resultados.map((escala) => (
+        {resultadosFiltrados.map((escala) => (
           <div key={escala.id_esd} className="col-md-4">
-            <div className="card shadow-sm h-100">
+            <div
+              className="card shadow-sm h-100 cursor-pointer"
+              role="button"
+              onClick={() =>
+                router.push(
+                  `/escala/historico/historico_selecionado/${escala.id_esd}`,
+                )
+              }
+            >
               <div className="card-body d-flex flex-column">
                 {/* Cabeçalho */}
                 <div className="d-flex justify-content-between align-items-start">
@@ -106,39 +165,35 @@ export default function Page() {
                     </h5>
 
                     <small className="text-muted">
-                      {escala.data} • {escala.horario}
+                      {escala.data} - {escala.horario}
                     </small>
                   </div>
 
                   {/* Botão excluir */}
                   <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => excluir(escala.id_esd)}
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => {
+                      e.stopPropagation(); // agora funciona 100%
+                      setId(escala.id_esd);
+                      setModalConf(true);
+                    }}
                     title="Excluir escala"
                   >
-                    ✕
+                    <i className="bi bi-trash-fill text-white"></i>
                   </button>
-                </div>
-
-                <hr />
-
-                {/* Resultados */}
-                <div className="flex-grow-1">
-                  {escala.resultados.map((r) => (
-                    <div
-                      key={r.id_esr}
-                      className="d-flex justify-content-between"
-                    >
-                      <span>{r.funcao}</span>
-                      <strong>{r.individuo ?? "—"}</strong>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      {modalConf && (
+        <ModalConfirmacao
+          mensagem="Deseja realmente excluir este registro?"
+          onConfirmar={() => excluir()}
+          onCancelar={() => setModalConf(false)}
+        />
+      )}
     </div>
   );
 }

@@ -137,34 +137,67 @@ def escolher_individuo(
     data_anterior,
     escalados_hoje: set
 ):
-    candidatos = candidatos_por_prioridade(
-        db,
-        cfg,
-        data_atual,
-        data_anterior,
-        escalados_hoje
-    )
+    # pega todos os indivíduos ativos
+    individuos = db.query(Individuo).filter(
+        Individuo.status_ind == "ativo"
+    ).all()
 
-    if not candidatos:
-        return None
+    pontuacoes = []
 
-    # pega apenas os de maior prioridade (menor diferença)
-    melhor_prioridade = candidatos[0][1]
-    mais_adequados = [
-        ind for ind, p in candidatos if p == melhor_prioridade
-    ]
+    nivel_fun = ORDEM_NIVEL.get(cfg.funcao.nivel_fun, 0)
 
-    # justiça mensal (o que você já fazia)
-    contagem = []
-    for ind in mais_adequados:
-        qtd = db.query(EscalaResultado).join(EscalaDia).filter(
+    for ind in individuos:
+        # já escalado hoje
+        if ind.id_ind in escalados_hoje:
+            continue
+
+        # indisponível no dia
+        if db.query(Indisponibilidade).filter(
+            Indisponibilidade.id_ind_fk == ind.id_ind,
+            Indisponibilidade.data_indp == data_atual
+        ).first():
+            continue
+
+        # já escalado ontem
+        if db.query(EscalaResultado).join(EscalaDia).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
-            func.month(EscalaDia.data_esd) == data_atual.month
+            EscalaDia.data_esd == data_anterior
+        ).first():
+            continue
+
+        # nível insuficiente
+        nivel_ind = ORDEM_NIVEL.get(ind.nivel_ind, 0)
+        if nivel_ind < nivel_fun:
+            continue
+
+        # quantas vezes serviu no mês
+        qtd_mes = db.query(EscalaResultado).join(EscalaDia).filter(
+            EscalaResultado.id_ind_fk == ind.id_ind,
+            func.month(EscalaDia.data_esd) == data_atual.month,
+            func.year(EscalaDia.data_esd) == data_atual.year
         ).count()
 
-        contagem.append((ind, qtd))
+        # última vez que serviu
+        ultima = db.query(EscalaDia.data_esd).join(EscalaResultado).filter(
+            EscalaResultado.id_ind_fk == ind.id_ind,
+            EscalaDia.data_esd < data_atual
+        ).order_by(EscalaDia.data_esd.desc()).first()
 
-    menor = min(qtd for _, qtd in contagem)
-    menos_serviram = [ind for ind, qtd in contagem if qtd == menor]
+        dias_desde = (data_atual - ultima[0]).days if ultima else 999
 
-    return random.choice(menos_serviram)
+        # score de justiça (quanto menor, melhor)
+        score = (qtd_mes * 10) - dias_desde
+
+        pontuacoes.append((ind, score))
+
+    if not pontuacoes:
+        return None
+
+    # pega apenas os com menor score
+    menor_score = min(score for _, score in pontuacoes)
+    mais_justos = [ind for ind, score in pontuacoes if score == menor_score]
+
+    # escolhe aleatoriamente entre os mais justos
+    return random.choice(mais_justos)
+
+
