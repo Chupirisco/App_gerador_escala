@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
 type ModalConfirmacaoProps = {
-  mensagem: string
-  onConfirmar: () => void
-  onCancelar: () => void
-}
+  mensagem: string;
+  onConfirmar: () => void;
+  onCancelar: () => void;
+};
 
 export default function ModalConfirmacao({
   mensagem,
   onConfirmar,
-  onCancelar
+  onCancelar,
 }: ModalConfirmacaoProps) {
   return (
     <>
@@ -25,7 +25,6 @@ export default function ModalConfirmacao({
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-
             {/* Header */}
             <div className="modal-header">
               <h5 className="modal-title">Confirmação</h5>
@@ -52,15 +51,17 @@ export default function ModalConfirmacao({
 
               <button
                 className="btn btn-danger"
-                onClick={() => onConfirmar()}
+                onClick={() => {
+                  onConfirmar();
+                  onCancelar();
+                }}
               >
                 Confirmar
               </button>
             </div>
-
           </div>
         </div>
       </div>
     </>
-  )
+  );
 }

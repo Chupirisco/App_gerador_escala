@@ -52,7 +52,7 @@ create table escala_resultado(
     id_fun_fk int,
     id_ind_fk int null,
     foreign key (id_esd_fk) references escala_dia (id_esd) on delete cascade,
-    foreign key (id_fun_fk) references funcao (id_fun),
+    foreign key (id_fun_fk) references funcao (id_fun) on delete cascade,
     foreign key (id_ind_fk) references individuo (id_ind)
 );
 

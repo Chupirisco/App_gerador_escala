@@ -1,13 +1,18 @@
+"use client";
+
 import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
-import { Dispatch, JSX, SetStateAction } from "react";
+import { Dispatch, JSX, SetStateAction, useState } from "react";
 import ListaEscalasDia from "./lista_escala";
 import { cadastrarDias, criarEscala } from "@/services/api/escala.rep";
+import Notificacao from "@/components/Notificacao";
+import { useRouter } from "next/navigation";
 
 type ConfigurarDatasProps = {
   acao: Dispatch<SetStateAction<string>>;
 };
 
 export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
+  const router = useRouter();
   const {
     diasSelecionados,
     setDiaAtivo,
@@ -17,6 +22,10 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
     ano,
     resetar,
   } = useGeracaoEscala();
+
+  const [not, setNot] = useState(false);
+  const [notMenssagem, setNotMenssagem] = useState("");
+  const [notTipo, setNotTipo] = useState("");
 
   function diaEstaConfigurado(dia: number) {
     if (diaAtivo === dia) return "btn-primary";
@@ -79,7 +88,7 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
     );
   }
 
-  function aplicarAlteracoes() {
+  async function aplicarAlteracoes() {
     // Verifica se todos os dias selecionados têm ao menos uma escala configurada
     const todosConfigurados = diasSelecionados.every((dia) => {
       const escalasDoDia = escalas.filter((e) => e.dia === dia);
@@ -89,12 +98,20 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
     });
 
     if (!todosConfigurados) {
-      // mostrar novitificação aqui !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      setNotMenssagem("certifique-se que todos os dias foram configurados!");
+      setNotTipo("erro");
+      setNot(true);
       return;
     }
 
-    cadastrarDias(escalas, ano, mes);
-    criarEscala(mes, ano);
+    await cadastrarDias(escalas, ano, mes);
+    await criarEscala(mes, ano);
+
+    setNotMenssagem("Operação realizada com sucesso!");
+    setNotTipo("sucesso");
+    setNot(true);
+
+    router.push(`/escala/historico/`);
     // Se passou na verificação, avança
     acao("funcao");
   }
@@ -131,6 +148,15 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
           Avançar
         </button>
       </div>
+      {not && (
+        <div className="position-fixed end-0 bottom-0 p-3">
+          <Notificacao
+            mensagem={notMenssagem}
+            onClose={() => setNot(false)}
+            type={notTipo}
+          ></Notificacao>
+        </div>
+      )}
     </div>
   );
 }

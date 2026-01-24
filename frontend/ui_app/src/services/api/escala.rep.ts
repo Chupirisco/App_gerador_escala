@@ -34,14 +34,10 @@ export const criarEscala = async (mes: number, ano: number) => {
   });
 };
 
-export const buscarResultados = async (): Promise<HistoricoResultado[]> => {
-  const res = await api.get<HistoricoResultado[]>("/escala-resultado/");
-
-  return res.data.map((i) => ({
-    id_esr: i.id_esr,
-    funcao: i.funcao,
-    individuo: i.individuo,
-  }));
+export const buscarHistoricoPorId = async (id: number) => {
+  console.log(id);
+  const res = await api.get(`/escala-dia/historico/${id}`);
+  return res.data;
 };
 
 export const buscarHistorico = async (): Promise<HistoricoEscala[]> => {

@@ -9,5 +9,6 @@ export interface HistoricoEscala {
   data: string;
   horario: string;
   local: string | null;
+  id_loc: number;
   resultados: HistoricoResultado[];
 }

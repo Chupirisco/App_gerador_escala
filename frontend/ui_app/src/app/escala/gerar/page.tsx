@@ -5,7 +5,7 @@ import EscolherData from "./escolher_data";
 import ConfigurarDatas from "./configurar_datas";
 import { useGeracaoEscala } from "@/services/providers/escala_dia.prov";
 
-export default function Gerar() {
+export default function Page() {
   const { mes, ano, setMes, setAno } = useGeracaoEscala();
 
   const [pagina, setPagina] = useState("dias");

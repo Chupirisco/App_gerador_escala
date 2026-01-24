@@ -27,6 +27,7 @@ type GeracaoEscalaContextType = {
 
   escalasDoDia: (dia: number) => EscalaDia[];
   resetar: () => void;
+  removerEscala: (id: string) => void;
 };
 
 // Criação do Context
@@ -64,6 +65,13 @@ export function GeracaoEscalaProvider({
     setEscalaAtivaId(null);
   }
 
+  function removerEscala(id: string) {
+    setEscalas((prev) => prev.filter((escala) => escala.id !== id));
+
+    // se a escala excluída estiver aberta, fecha o modal
+    setEscalaAtivaId((prev) => (prev === String(id) ? null : prev));
+  }
+
   return (
     <GeracaoEscalaContext.Provider
       value={{
@@ -87,6 +95,7 @@ export function GeracaoEscalaProvider({
         setEscalaAtivaId,
 
         escalasDoDia,
+        removerEscala,
       }}
     >
       {children}
