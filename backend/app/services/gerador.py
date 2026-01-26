@@ -26,23 +26,29 @@ def pode_exercer(individuo, funcao) -> bool:
 # ====================
 # Geração da escala do mês
 # ====================
+from collections import defaultdict
+
 def gerar_escala_mes(db: Session, mes: int, ano: int):
-    """Percorre todas as escalas do mês e gera cada dia"""
     escalas = db.query(EscalaDia).filter(
         func.month(EscalaDia.data_esd) == mes,
         func.year(EscalaDia.data_esd) == ano
     ).all()
 
+    controle_mes = {
+        "escalados": set(),
+        "contagem": defaultdict(int)
+    }
+
     for escala in escalas:
-        gerar_escala_dia(db, escala)
+        gerar_escala_dia(db, escala, controle_mes)
 
     db.commit()
+
 
 # ====================
 # Geração da escala de um dia
 # ====================
-def gerar_escala_dia(db: Session, escala: EscalaDia):
-    """Gera os indivíduos para todas as funções de um dia"""
+def gerar_escala_dia(db: Session, escala: EscalaDia, controle_mes: dict):
     data_atual = escala.data_esd
     data_anterior = data_atual - timedelta(days=1)
 
@@ -50,12 +56,14 @@ def gerar_escala_dia(db: Session, escala: EscalaDia):
         EscalaDiaFuncao.id_esd_fk == escala.id_esd
     ).all()
 
-    # Controla quem já foi escalado hoje para evitar duplicidade
     escalados_hoje = set()
 
     for cfg in configuracoes:
         for _ in range(cfg.quantidade):
-            candidato = escolher_individuo(db, cfg, data_atual, data_anterior, escalados_hoje)
+            candidato = escolher_individuo(
+                db, cfg, data_atual, data_anterior,
+                escalados_hoje, controle_mes
+            )
 
             resultado = EscalaResultado(
                 id_esd_fk=escala.id_esd,
@@ -65,8 +73,11 @@ def gerar_escala_dia(db: Session, escala: EscalaDia):
 
             if candidato:
                 escalados_hoje.add(candidato.id_ind)
+                controle_mes["escalados"].add(candidato.id_ind)
+                controle_mes["contagem"][candidato.id_ind] += 1
 
             db.add(resultado)
+
 
 # ====================
 # Escolher indivíduo para uma função
@@ -76,46 +87,51 @@ def escolher_individuo(
     cfg: EscalaDiaFuncao,
     data_atual,
     data_anterior,
-    escalados_hoje: set
+    escalados_hoje: set,
+    controle_mes: dict
 ):
-    """Seleciona o indivíduo mais justo para a função do dia"""
-    # Todos os ativos
-    individuos = db.query(Individuo).filter(Individuo.status_ind == "ativo").all()
-    candidatos = []
+    individuos = db.query(Individuo).filter(
+        Individuo.status_ind == "ativo"
+    ).all()
 
     nivel_fun = NIVEL_PADRAO.get(cfg.funcao.nivel_fun, 0)
 
-    # Avalia cada indivíduo
+    candidatos_novos = []
+    candidatos_recorrentes = []
+
     for ind in individuos:
         nivel_ind = NIVEL_PADRAO.get(ind.nivel_ind, 0)
 
-        # Filtragens iniciais
+        # já escalado hoje
         if ind.id_ind in escalados_hoje:
-            continue  # já escalado hoje
+            continue
+
+        # nível insuficiente
         if nivel_ind < nivel_fun:
-            continue  # nível insuficiente
+            continue
+
+        # indisponível no dia
         if db.query(Indisponibilidade).filter(
             Indisponibilidade.id_ind_fk == ind.id_ind,
             Indisponibilidade.data_indp == data_atual
         ).first():
-            continue  # indisponível
+            continue
+
+        # trabalhou ontem (regra absoluta)
         if db.query(EscalaResultado).join(EscalaDia).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             EscalaDia.data_esd == data_anterior
         ).first():
-            continue  # já serviu ontem
+            continue
 
-        # ====================
-        # Score de justiça
-        # ====================
-        # Quantas vezes serviu no mês
-        qtd_mes = db.query(EscalaResultado).join(EscalaDia).filter(
-            EscalaResultado.id_ind_fk == ind.id_ind,
-            func.month(EscalaDia.data_esd) == data_atual.month,
-            func.year(EscalaDia.data_esd) == data_atual.year
-        ).count()
+        # prioridade de nível (quanto menor, melhor)
+        if nivel_ind == nivel_fun:
+            bonus_nivel = 0
+        else:
+            bonus_nivel = 5  # nível maior, mas não ideal
 
-        # Dias desde última escala
+        qtd_mes = controle_mes["contagem"].get(ind.id_ind, 0)
+
         ultima = db.query(EscalaDia.data_esd).join(EscalaResultado).filter(
             EscalaResultado.id_ind_fk == ind.id_ind,
             EscalaDia.data_esd < data_atual
@@ -123,26 +139,22 @@ def escolher_individuo(
 
         dias_desde = (data_atual - ultima[0]).days if ultima else 999
 
-        # Score: menor é melhor
-        # penaliza quem já serviu muitas vezes e dá prioridade a quem está no nível ideal
-        score = (qtd_mes * 10) - dias_desde + (nivel_ind - nivel_fun) * 5
+        score = (qtd_mes * 10) - dias_desde + bonus_nivel
 
-        candidatos.append((ind, score))
+        if ind.id_ind not in controle_mes["escalados"]:
+            candidatos_novos.append((ind, score))
+        else:
+            candidatos_recorrentes.append((ind, score))
 
-    # Se não houver candidatos ideais, adiciona qualquer indivíduo que possa exercer
-    if not candidatos:
-        for ind in individuos:
-            if NIVEL_PADRAO.get(ind.nivel_ind, 0) >= nivel_fun:
-                candidatos.append((ind, 999))  # score alto = menos ideal
+    # PRIORIDADE ABSOLUTA: quem ainda não serviu no mês
+    candidatos = candidatos_novos if candidatos_novos else candidatos_recorrentes
 
     if not candidatos:
         return None
 
-    # Seleciona os mais justos
     menor_score = min(score for _, score in candidatos)
     mais_justos = [ind for ind, score in candidatos if score == menor_score]
 
-    # Escolhe aleatoriamente entre os mais justos
-    escolhido = random.choice(mais_justos)
+    return random.choice(mais_justos)
 
-    return escolhido
+
