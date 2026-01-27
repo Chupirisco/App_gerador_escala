@@ -26,6 +26,8 @@ export default function Page() {
   const [notMenssagem, setNotMenssagem] = useState("");
   const [notTipo, setNotTipo] = useState("");
 
+  const [selecionarTudoChecked, setSelecionarTudoChecked] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     buscarIndividuoPorId(Number(id)).then((res) => {
@@ -146,6 +148,10 @@ export default function Page() {
           setDiasSalvos(res.dias),
         );
         (setDiasNovos([]), setDiasRemovidos([]));
+
+        //desmarca o chekbox
+        setSelecionarTudoChecked(false);
+
         setNotMenssagem("Operação realizada com sucesso!");
         setNotTipo("sucesso");
         setNot(true);
@@ -172,6 +178,39 @@ export default function Page() {
     }
     return false;
   };
+
+  function selecionarTudo(checked: boolean) {
+    if (!ano || !mes) return;
+
+    const totalDias = diasNoMes(ano, mes);
+    const todosOsDias = Array.from({ length: totalDias }, (_, i) => i + 1);
+
+    if (checked) {
+      const novos: number[] = [];
+      const removidos: number[] = [];
+
+      const todosJaSalvos = diasSalvos.length === totalDias;
+
+      todosOsDias.forEach((dia) => {
+        if (diasSalvos.includes(dia)) {
+          if (todosJaSalvos) {
+            // só remove se TODOS já estavam salvos
+            removidos.push(dia);
+          }
+        } else {
+          // não existia → adicionar
+          novos.push(dia);
+        }
+      });
+
+      setDiasNovos(novos);
+      setDiasRemovidos(removidos);
+    } else {
+      // desmarcar tudo
+      setDiasNovos([]);
+      setDiasRemovidos([]);
+    }
+  }
 
   return (
     <div className="d-flex h-100 w-100 py-5 flex-column align-items-center">
@@ -245,13 +284,32 @@ export default function Page() {
           {renderCalendario()}
         </div>
 
-        <div className="card-footer gap-2 d-flex justify-content-end">
-          <Link href={"/configuracao/individuo"} className="btn btn-secondary">
-            Cancelar
-          </Link>
-          <button onClick={cadastrar} className="btn  btn-primary ">
-            Aplicar
-          </button>
+        <div className="card-footer justify-content-betweencard-footer d-flex justify-content-between align-items-center">
+          <div className="form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              checked={selecionarTudoChecked}
+              onChange={(e) => {
+                setSelecionarTudoChecked(e.target.checked);
+                selecionarTudo(e.target.checked);
+              }}
+            />
+
+            <label className="form-check-label">Selecionar tudo</label>
+          </div>
+
+          <div className=" gap-2 d-flex">
+            <Link
+              href={"/configuracao/individuo"}
+              className="btn btn-secondary"
+            >
+              Cancelar
+            </Link>
+            <button onClick={cadastrar} className="btn  btn-primary ">
+              Aplicar
+            </button>
+          </div>
         </div>
       </div>
       {not && (
