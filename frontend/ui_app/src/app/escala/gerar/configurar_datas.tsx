@@ -6,6 +6,7 @@ import ListaEscalasDia from "./lista_escala";
 import { cadastrarDias, criarEscala } from "@/services/api/escala.rep";
 import Notificacao from "@/components/Notificacao";
 import { useRouter } from "next/navigation";
+import ModalCarregamento from "@/components/modal_carregamento";
 
 type ConfigurarDatasProps = {
   acao: Dispatch<SetStateAction<string>>;
@@ -26,6 +27,8 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
   const [not, setNot] = useState(false);
   const [notMenssagem, setNotMenssagem] = useState("");
   const [notTipo, setNotTipo] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   function diaEstaConfigurado(dia: number, habilitado: boolean) {
     if (!habilitado) return "btn-secondary";
@@ -73,7 +76,7 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
           type="button"
           className={`btn btn-sm ${diaEstaConfigurado(dia, habilitado)}`}
           onClick={() => habilitado && setDiaAtivo(dia)}
-          disabled={!habilitado} // dias não selecionados ficam disabled
+          disabled={!habilitado} //dias não selecionados ficam disabled
         >
           {dia}
         </button>,
@@ -105,9 +108,14 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
       setNot(true);
       return;
     }
+    //abre o modal de carregamento
+    setLoading(true);
 
     await cadastrarDias(escalas, ano, mes);
     await criarEscala(mes, ano);
+    //fecha o modal de carregamento
+    //por padrao ele ja é fechado ao fazer a navegação, mas para nao deixa-lo aberto fechemos manualmente
+    setLoading(false);
 
     setNotMenssagem("Operação realizada com sucesso!");
     setNotTipo("sucesso");
@@ -159,6 +167,7 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
           ></Notificacao>
         </div>
       )}
+      {loading && <ModalCarregamento />}
     </div>
   );
 }
