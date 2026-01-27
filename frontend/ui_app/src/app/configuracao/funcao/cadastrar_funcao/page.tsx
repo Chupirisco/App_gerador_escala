@@ -60,7 +60,7 @@ export default function CadastrarFuncao() {
               className="form-select shadow-sm"
             >
               <option value="">Nivel</option>
-              <option value="cerimoniario">Cerimoniário</option>
+              <option value="experiente">Experiente</option>
               <option value="intermediario">Intermediário</option>
               <option value="novato">Novato</option>
             </select>
