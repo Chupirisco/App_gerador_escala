@@ -1,4 +1,0 @@
-1. para executar entre na pasta ui_app
-2. para executar: npm run dev
-2.1. caso de erro executar: npm install
-2.2. tente novamente o comando: npm run dev
