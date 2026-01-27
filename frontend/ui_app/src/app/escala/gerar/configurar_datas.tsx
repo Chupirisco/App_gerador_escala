@@ -27,7 +27,9 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
   const [notMenssagem, setNotMenssagem] = useState("");
   const [notTipo, setNotTipo] = useState("");
 
-  function diaEstaConfigurado(dia: number) {
+  function diaEstaConfigurado(dia: number, habilitado: boolean) {
+    if (!habilitado) return "btn-secondary";
+
     if (diaAtivo === dia) return "btn-primary";
 
     const escalasDoDia = escalas.filter((e) => e.dia === dia);
@@ -69,7 +71,7 @@ export default function ConfigurarDatas({ acao }: ConfigurarDatasProps) {
         <button
           key={dia}
           type="button"
-          className={`btn btn-sm ${diaEstaConfigurado(dia)}`}
+          className={`btn btn-sm ${diaEstaConfigurado(dia, habilitado)}`}
           onClick={() => habilitado && setDiaAtivo(dia)}
           disabled={!habilitado} // dias não selecionados ficam disabled
         >

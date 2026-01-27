@@ -26,6 +26,8 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
 
   const { diasSelecionados, setDiasSelecionados } = useGeracaoEscala();
 
+  const [selecionarTudoChecked, setSelecionarTudoChecked] = useState(false);
+
   function diasNoMes(ano: number, mes: number) {
     return new Date(ano, mes, 0).getDate();
   }
@@ -101,6 +103,18 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
       </div>
     );
   }
+  function selecionarTudo(checked: boolean) {
+    if (!ano || !mes) return;
+
+    const totalDias = diasNoMes(ano, mes);
+    const todosOsDias = Array.from({ length: totalDias }, (_, i) => i + 1);
+
+    if (checked) {
+      setDiasNovos(todosOsDias);
+    } else {
+      setDiasNovos([]);
+    }
+  }
 
   function aplicarAlteracoes() {
     if (diasNovos.length === 0) {
@@ -118,6 +132,8 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
     setDiasSelecionados(novosDias);
     setDiasNovos([]);
     setDiasRemovidos([]);
+
+    setSelecionarTudoChecked(false);
 
     setNotMenssagem("Salvo!");
     setNotTipo("sucesso");
@@ -144,7 +160,20 @@ export default function EscolherData({ ano, mes, avancar }: EscolherDataProps) {
         {/* Calendário */}
         {renderCalendario()}
       </div>
-      <div className="card-footer d-flex justify-content-end">
+      <div className="card-footer d-flex justify-content-between align-items-center">
+        <div className="form-check">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            checked={selecionarTudoChecked}
+            onChange={(e) => {
+              setSelecionarTudoChecked(e.target.checked);
+              selecionarTudo(e.target.checked);
+            }}
+          />
+
+          <label className="form-check-label">Selecionar tudo</label>
+        </div>
         <button className="btn  btn-primary" onClick={aplicarAlteracoes}>
           Avançar
         </button>
