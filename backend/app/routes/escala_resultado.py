@@ -43,15 +43,18 @@ def listar_lotes(db: Session = Depends(get_db)):
 def listar_dias_do_lote(lote_escala: str, db: Session = Depends(get_db)):
 
     dias = (
-        db.query(EscalaDia.id_esd, EscalaDia.data_esd)
-        .join(EscalaResultado)
+        db.query(
+            func.min(EscalaDia.id_esd).label("id_esd"),
+            EscalaDia.data_esd.label("data"),
+        )
+        .join(EscalaResultado, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
         .filter(EscalaResultado.lote_escala_esr == lote_escala)
-        .distinct()
+        .group_by(EscalaDia.data_esd)
         .order_by(EscalaDia.data_esd)
         .all()
     )
 
-    return [{"id_esd": d.id_esd, "data": d.data_esd} for d in dias]
+    return [{"id_esd": d.id_esd, "data": d.data} for d in dias]
 
 
 # get filtrado para mostrar o resultado de uma geração
@@ -91,17 +94,22 @@ def deletar_resultado(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/lotes/{lote}")
-def deletar_resultado(lote: str, db: Session = Depends(get_db)):
-    res = (
-        db.query(EscalaResultado)
+def deletar_lote(lote: str, db: Session = Depends(get_db)):
+
+    subquery = (
+        db.query(EscalaResultado.id_esd_fk)
         .filter(EscalaResultado.lote_escala_esr == lote)
-        .first()
+        .subquery()
     )
 
-    if not res:
+    total = (
+        db.query(EscalaDia)
+        .filter(EscalaDia.id_esd.in_(subquery))
+        .delete(synchronize_session=False)
+    )
+
+    if total == 0:
         raise HTTPException(status_code=404, detail="Resultado não encontrado")
 
-    db.delete(res)
     db.commit()
-
     return {"msg": "Sucesso"}
