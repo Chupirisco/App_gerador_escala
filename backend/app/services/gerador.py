@@ -8,35 +8,40 @@ from app.models.indisponibilidade import Indisponibilidade
 from app.models.escala_dia import EscalaDia
 from app.models.escala_dia_funcao import EscalaDiaFuncao
 from app.models.escala_resultado import EscalaResultado
-
-# ====================
-# Níveis padronizados
-# ====================
-# novato < intermediario < experiente
-NIVEL_PADRAO = {
-    "novato": 1,
-    "intermediario": 2,
-    "experiente": 3
-}
-
-def pode_exercer(individuo, funcao) -> bool:
-    """Verifica se o indivíduo possui nível suficiente para a função"""
-    return NIVEL_PADRAO.get(individuo.nivel_ind, 0) >= NIVEL_PADRAO.get(funcao.nivel_fun, 0)
-
-# ====================
-# Geração da escala do mês
-# ====================
 from collections import defaultdict
 
+
+import uuid
+
+
+# Níveis padronizados
+NIVEL_PADRAO = {"novato": 1, "intermediario": 2, "experiente": 3}
+
+
+def pode_exercer(individuo, funcao) -> bool:
+    return NIVEL_PADRAO.get(individuo.nivel_ind, 0) >= NIVEL_PADRAO.get(
+        funcao.nivel_fun, 0
+    )
+
+
+# Geração da escala do mês
+
+
 def gerar_escala_mes(db: Session, mes: int, ano: int):
-    escalas = db.query(EscalaDia).filter(
-        func.month(EscalaDia.data_esd) == mes,
-        func.year(EscalaDia.data_esd) == ano
-    ).all()
+    uuid_geracao = str(uuid.uuid4())  # 👈 id único da geração
+
+    escalas = (
+        db.query(EscalaDia)
+        .filter(
+            func.month(EscalaDia.data_esd) == mes, func.year(EscalaDia.data_esd) == ano
+        )
+        .all()
+    )
 
     controle_mes = {
         "escalados": set(),
-        "contagem": defaultdict(int)
+        "contagem": defaultdict(int),
+        "lote": uuid_geracao,
     }
 
     for escala in escalas:
@@ -45,30 +50,30 @@ def gerar_escala_mes(db: Session, mes: int, ano: int):
     db.commit()
 
 
-# ====================
-# Geração da escala de um dia
-# ====================
+#   Geração da escala de um dia
 def gerar_escala_dia(db: Session, escala: EscalaDia, controle_mes: dict):
     data_atual = escala.data_esd
     data_anterior = data_atual - timedelta(days=1)
 
-    configuracoes = db.query(EscalaDiaFuncao).filter(
-        EscalaDiaFuncao.id_esd_fk == escala.id_esd
-    ).all()
+    configuracoes = (
+        db.query(EscalaDiaFuncao)
+        .filter(EscalaDiaFuncao.id_esd_fk == escala.id_esd)
+        .all()
+    )
 
     escalados_hoje = set()
 
     for cfg in configuracoes:
         for _ in range(cfg.quantidade):
             candidato = escolher_individuo(
-                db, cfg, data_atual, data_anterior,
-                escalados_hoje, controle_mes
+                db, cfg, data_atual, data_anterior, escalados_hoje, controle_mes
             )
 
             resultado = EscalaResultado(
                 id_esd_fk=escala.id_esd,
                 id_fun_fk=cfg.id_fun_fk,
-                id_ind_fk=candidato.id_ind if candidato else None
+                id_ind_fk=candidato.id_ind if candidato else None,
+                lote_escala_esr=controle_mes["lote"],
             )
 
             if candidato:
@@ -79,20 +84,16 @@ def gerar_escala_dia(db: Session, escala: EscalaDia, controle_mes: dict):
             db.add(resultado)
 
 
-# ====================
 # Escolher indivíduo para uma função
-# ====================
 def escolher_individuo(
     db: Session,
     cfg: EscalaDiaFuncao,
     data_atual,
     data_anterior,
     escalados_hoje: set,
-    controle_mes: dict
+    controle_mes: dict,
 ):
-    individuos = db.query(Individuo).filter(
-        Individuo.status_ind == "ativo"
-    ).all()
+    individuos = db.query(Individuo).filter(Individuo.status_ind == "ativo").all()
 
     nivel_fun = NIVEL_PADRAO.get(cfg.funcao.nivel_fun, 0)
 
@@ -111,17 +112,27 @@ def escolher_individuo(
             continue
 
         # indisponível no dia
-        if db.query(Indisponibilidade).filter(
-            Indisponibilidade.id_ind_fk == ind.id_ind,
-            Indisponibilidade.data_indp == data_atual
-        ).first():
+        if (
+            db.query(Indisponibilidade)
+            .filter(
+                Indisponibilidade.id_ind_fk == ind.id_ind,
+                Indisponibilidade.data_indp == data_atual,
+            )
+            .first()
+        ):
             continue
 
         # trabalhou ontem (regra absoluta)
-        if db.query(EscalaResultado).join(EscalaDia).filter(
-            EscalaResultado.id_ind_fk == ind.id_ind,
-            EscalaDia.data_esd == data_anterior
-        ).first():
+        if (
+            db.query(EscalaResultado)
+            .join(EscalaDia)
+            .filter(
+                EscalaResultado.id_ind_fk == ind.id_ind,
+                EscalaDia.data_esd == data_anterior,
+                EscalaResultado.lote_escala_esr == controle_mes["lote"],
+            )
+            .first()
+        ):
             continue
 
         # prioridade de nível (quanto menor, melhor)
@@ -132,10 +143,17 @@ def escolher_individuo(
 
         qtd_mes = controle_mes["contagem"].get(ind.id_ind, 0)
 
-        ultima = db.query(EscalaDia.data_esd).join(EscalaResultado).filter(
-            EscalaResultado.id_ind_fk == ind.id_ind,
-            EscalaDia.data_esd < data_atual
-        ).order_by(EscalaDia.data_esd.desc()).first()
+        ultima = (
+            db.query(EscalaDia.data_esd)
+            .join(EscalaResultado)
+            .filter(
+                EscalaResultado.id_ind_fk == ind.id_ind,
+                EscalaResultado.lote_escala_esr == controle_mes["lote"],
+                EscalaDia.data_esd < data_atual,
+            )
+            .order_by(EscalaDia.data_esd.desc())
+            .first()
+        )
 
         dias_desde = (data_atual - ultima[0]).days if ultima else 999
 
@@ -156,5 +174,3 @@ def escolher_individuo(
     mais_justos = [ind for ind, score in candidatos if score == menor_score]
 
     return random.choice(mais_justos)
-
-

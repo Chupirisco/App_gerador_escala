@@ -1,10 +1,13 @@
 "use client";
 import ModalConfirmacao from "@/components/ModalConfirmacao";
-import { HistoricoEscala } from "@/model/escala_resultado";
+import Notificacao from "@/components/Notificacao";
+import { HistoricoLote } from "@/model/escala_resultado";
 import { Localidade } from "@/model/localidade.model";
-import { buscarHistorico, excluirEscalaDia } from "@/services/api/escala.rep";
+import {
+  buscarTodasEscalas,
+  detelarEscalaLote,
+} from "@/services/api/escala.rep";
 import { listarLocalidade } from "@/services/api/localidade.rep";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
@@ -12,29 +15,29 @@ import { useEffect, useState } from "react";
 export default function Page() {
   const router = useRouter();
 
-  const [resultados, setResultados] = useState<HistoricoEscala[]>([]); // original
+  //filtro
+  const [resultados, setResultados] = useState<HistoricoLote[]>([]);
   const [resultadosFiltrados, setResultadosFiltrados] = useState<
-    HistoricoEscala[]
+    HistoricoLote[]
   >([]);
-
-  const [filtroLocal, setFiltroLocal] = useState<number | null>(0);
-  const [filtroDia, setFiltroDia] = useState<number | null>(null);
   const [filtroMes, setFiltroMes] = useState<number | null>(null);
   const [filtroAno, setFiltroAno] = useState<number | null>(null);
 
-  const [local, setLocal] = useState<Localidade[]>([]);
-
+  //modal
   const [modalConf, setModalConf] = useState(false);
-  const [id, setId] = useState<number | null>(null);
+
+  //notificação
+  const [not, setNot] = useState(false);
+  const [notMenssagem, setNotMenssagem] = useState("");
+  const [notTipo, setNotTipo] = useState("");
+
+  //excluir e abrir
+  const [lote, setLote] = useState("");
 
   useEffect(() => {
-    buscarHistorico().then((res) => {
+    buscarTodasEscalas().then((res) => {
       setResultados(res);
       setResultadosFiltrados(res);
-    });
-
-    listarLocalidade().then((res) => {
-      setLocal(res);
     });
   }, []);
 
@@ -43,17 +46,9 @@ export default function Page() {
 
     let filtrado = [...resultados];
 
-    if (filtroLocal && filtroLocal !== 0) {
-      filtrado = filtrado.filter((e) => e.id_loc === filtroLocal);
-    }
-
     filtrado = filtrado.filter((escala) => {
-      const [ano, mes, dia] = escala.data.split("-").map(Number);
-
-      if (filtroAno && ano !== filtroAno) return false;
-      if (filtroMes && mes !== filtroMes) return false;
-      if (filtroDia && dia !== filtroDia) return false;
-
+      if (escala.ano !== filtroAno && filtroAno !== null) return false;
+      if (escala.mes !== filtroMes && filtroMes !== null) return false;
       return true;
     });
 
@@ -62,15 +57,26 @@ export default function Page() {
 
   const excluir = async () => {
     try {
-      await excluirEscalaDia(id!);
+      const res = await detelarEscalaLote(lote);
+      if (res !== "Sucesso") {
+        setNotMenssagem("Falha ao excluir!");
+        setNotTipo("erro");
+        setNot(true);
+        return;
+      }
 
-      setResultados((prev) => prev.filter((escala) => escala.id_esd !== id));
-
+      setResultados((prev) => prev.filter((escala) => escala.lote !== lote));
       setResultadosFiltrados((prev) =>
-        prev.filter((escala) => escala.id_esd !== id),
+        prev.filter((escala) => escala.lote !== lote),
       );
+      setNotMenssagem("Operação realizado com sucesso!");
+      setNotTipo("sucesso");
+      setNot(true);
     } catch (err) {
       alert("Erro ao excluir a escala");
+      setNotMenssagem("Falha ao excluir!");
+      setNotTipo("erro");
+      setNot(true);
     }
   };
 
@@ -81,34 +87,6 @@ export default function Page() {
         <div className="card-body">
           <h3>Filtros</h3>
           <form className="row g-2 align-items-end" onSubmit={filtrar}>
-            <div className="col-md-2">
-              <label className="form-label">Local</label>
-              <select
-                className="form-select shadow-sm"
-                value={filtroLocal!}
-                onChange={(e) => setFiltroLocal(Number(e.target.value))}
-              >
-                <option value={""}>Escolha</option>
-                {local.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Dia</label>
-              <input
-                type="number"
-                min={1}
-                max={31}
-                className="form-control shadow-sm"
-                onChange={(e) =>
-                  setFiltroDia(e.target.value ? Number(e.target.value) : null)
-                }
-              />
-            </div>
             <div className="col-md-3">
               <label className="form-label">Mês</label>
               <select
@@ -145,36 +123,34 @@ export default function Page() {
       </div>
 
       <div className="row g-3 w-75">
-        {resultadosFiltrados.map((escala) => (
-          <div key={escala.id_esd} className="col-md-4">
+        {resultadosFiltrados.map((escala, index) => (
+          <div key={index} className="col-md-4">
             <div
               className="card shadow-sm h-100 cursor-pointer"
               role="button"
-              onClick={() =>
-                router.push(
-                  `/escala/historico/historico_selecionado/${escala.id_esd}`,
-                )
-              }
+              // onClick={() =>
+              //   router.push(
+              //     `/escala/historico/historico_selecionado/${escala.id_esd}`,
+              //   )
+              // }
             >
               <div className="card-body d-flex flex-column">
                 {/* Cabeçalho */}
                 <div className="d-flex justify-content-between align-items-start">
                   <div>
                     <h5 className="card-title mb-1">
-                      {escala.local ?? "Local não informado"}
+                      mês: {escala.mes}
+                      <br />
+                      ano: {escala.ano}
                     </h5>
-
-                    <small className="text-muted">
-                      {escala.data} - {escala.horario}
-                    </small>
                   </div>
 
                   {/* Botão excluir */}
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={(e) => {
-                      e.stopPropagation(); // agora funciona 100%
-                      setId(escala.id_esd);
+                      e.stopPropagation();
+                      setLote(escala.lote);
                       setModalConf(true);
                     }}
                     title="Excluir escala"
@@ -193,6 +169,15 @@ export default function Page() {
           onConfirmar={() => excluir()}
           onCancelar={() => setModalConf(false)}
         />
+      )}
+      {not && (
+        <div className="position-fixed end-0 bottom-0 p-3">
+          <Notificacao
+            mensagem={notMenssagem}
+            type={notTipo}
+            onClose={() => setNot(false)}
+          ></Notificacao>
+        </div>
       )}
     </div>
   );
