@@ -20,6 +20,7 @@ export default function Inicio() {
       .then(setFuncao)
       .catch((err) => console.error("falha na requisção, função: " + err));
   }, []);
+
   useEffect(() => {
     listarLocalidade()
       .then(setLocalidade)

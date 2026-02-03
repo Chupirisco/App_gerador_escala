@@ -12,3 +12,9 @@ export interface HistoricoEscala {
   id_loc: number;
   resultados: HistoricoResultado[];
 }
+
+export interface HistoricoLote {
+  lote: string;
+  mes: number;
+  ano: number;
+}

@@ -50,6 +50,7 @@ create table escala_resultado(
     id_esd_fk int,
     id_fun_fk int,
     id_ind_fk int null,
+    lote_escala_esr VARCHAR(36) not null,
     foreign key (id_esd_fk) references escala_dia (id_esd) on delete cascade,
     foreign key (id_fun_fk) references funcao (id_fun) on delete cascade,
     foreign key (id_ind_fk) references individuo (id_ind)
@@ -58,5 +59,7 @@ create table escala_resultado(
 create index idx_indp_individuo_data on indisponibilidade (id_ind_fk, data_indp);
 create index idx_escala_dia_data on escala_dia(data_esd);
 create index idx_resultado_escala on escala_resultado (id_esd_fk);
+create index idx_lote_escala on escala_resultado(lote_escala_esr);
+
 
 

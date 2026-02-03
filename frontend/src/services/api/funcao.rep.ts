@@ -1,7 +1,6 @@
 import { api } from "./api";
 
 export const listarFuncao = async () => {
-  console.log("API URL:" + process.env.NEXT_PUBLIC_API_URL);
   const res = await api.get("/funcao");
   return res.data.map((f: any) => ({
     id: f.id_fun,

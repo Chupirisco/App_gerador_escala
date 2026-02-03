@@ -20,6 +20,7 @@ class EscalaResultadoResponse(BaseModel):
     individuo: str | None
     data: date
     horario: str
+    lote_escala_esr: str
 
     class Config:
         from_attributes = True
