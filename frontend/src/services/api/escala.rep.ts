@@ -8,6 +8,7 @@ export const cadastrarDias = async (
   mes: number,
 ) => {
   for (const escala of escalas) {
+    console.log(escala.id);
     const data = new Date(ano, mes - 1, escala.dia);
 
     const payload = {

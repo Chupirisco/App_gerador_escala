@@ -4,28 +4,15 @@ from app.database import get_db
 from app.models.escala_dia import EscalaDia
 from app.models.escala_dia_funcao import EscalaDiaFuncao
 from app.models.local import Local
-from app.schemas.escala_dia import EscalaDiaCreate
-from app.schemas.escala_dia_funcao import EscalaDiaFuncaoCreate
+from app.schemas.escala_dia import EscalaDiaCreateWithFuncoes
 
-from typing import List
 
-router = APIRouter(
-    prefix="/escala-dia",
-    tags=["Escala Dia"]
-)
-
-# Novo schema para receber escala + funções
-class EscalaDiaWithFuncoesCreate(EscalaDiaCreate):
-    funcoes: List[EscalaDiaFuncaoCreate]
-
+router = APIRouter(prefix="/escala-dia", tags=["Escala Dia"])
 
 
 # CREATE
 @router.post("/")
-def criar_escala_dia(
-    escala: EscalaDiaWithFuncoesCreate,
-    db: Session = Depends(get_db)
-):
+def criar_escala_dia(escala: EscalaDiaCreateWithFuncoes, db: Session = Depends(get_db)):
     try:
         local = db.query(Local).filter(Local.id_loc == escala.id_loc_fk).first()
         if not local:
@@ -34,18 +21,18 @@ def criar_escala_dia(
         nova_escala = EscalaDia(
             data_esd=escala.data_esd,
             horario_esd=escala.horario_esd,
-            id_loc_fk=escala.id_loc_fk
+            id_loc_fk=escala.id_loc_fk,
         )
 
         db.add(nova_escala)
-        db.flush() 
+        db.flush()
 
         for funcao in escala.funcoes:
             db.add(
                 EscalaDiaFuncao(
                     quantidade=funcao.quantidade,
                     id_fun_fk=funcao.id_fun_fk,
-                    id_esd_fk=nova_escala.id_esd
+                    id_esd_fk=nova_escala.id_esd,
                 )
             )
 
@@ -60,12 +47,11 @@ def criar_escala_dia(
 @router.get("/historico")
 def historico(db: Session = Depends(get_db)):
     escalas = db.query(EscalaDia).all()
-   
-   
+
     escalas = (
-    db.query(EscalaDia)
-    .order_by(EscalaDia.data_esd.desc(), EscalaDia.horario_esd)
-    .all()
+        db.query(EscalaDia)
+        .order_by(EscalaDia.data_esd.desc(), EscalaDia.horario_esd)
+        .all()
     )
 
     return [
@@ -79,30 +65,22 @@ def historico(db: Session = Depends(get_db)):
                 {
                     "id_esr": r.id_esr,
                     "funcao": r.funcao.nome_fun,
-                    "individuo": r.individuo.nome_ind if r.individuo else None
+                    "individuo": r.individuo.nome_ind if r.individuo else None,
+                    "lote": r.lote_escala_esr,
                 }
                 for r in e.resultados
-            ]
+            ],
         }
         for e in escalas
     ]
 
+
 @router.get("/historico/{id}")
-def buscar_escala_por_id(
-    id: int,
-    db: Session = Depends(get_db)
-):
-    escala = (
-        db.query(EscalaDia)
-        .filter(EscalaDia.id_esd == id)
-        .first()
-    )
+def buscar_escala_por_id(id: int, db: Session = Depends(get_db)):
+    escala = db.query(EscalaDia).filter(EscalaDia.id_esd == id).first()
 
     if not escala:
-        raise HTTPException(
-            status_code=404,
-            detail="Escala não encontrada"
-        )
+        raise HTTPException(status_code=404, detail="Escala não encontrada")
 
     return {
         "id_esd": escala.id_esd,
@@ -114,27 +92,19 @@ def buscar_escala_por_id(
             {
                 "id_esr": r.id_esr,
                 "funcao": r.funcao.nome_fun,
-                "individuo": r.individuo.nome_ind if r.individuo else None
+                "individuo": r.individuo.nome_ind if r.individuo else None,
             }
             for r in escala.resultados
-        ]
+        ],
     }
 
 
 @router.delete("/{id_esd}")
-def deletar_escala_dia(
-    id_esd: int,
-    db: Session = Depends(get_db)
-):
-    escala = db.query(EscalaDia).filter(
-        EscalaDia.id_esd == id_esd
-    ).first()
+def deletar_escala_dia(id_esd: int, db: Session = Depends(get_db)):
+    escala = db.query(EscalaDia).filter(EscalaDia.id_esd == id_esd).first()
 
     if not escala:
-        raise HTTPException(
-            status_code=404,
-            detail="Escala não encontrada"
-        )
+        raise HTTPException(status_code=404, detail="Escala não encontrada")
 
     db.delete(escala)
     db.commit()

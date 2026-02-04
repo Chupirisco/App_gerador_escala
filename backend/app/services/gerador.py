@@ -28,12 +28,18 @@ def pode_exercer(individuo, funcao) -> bool:
 
 
 def gerar_escala_mes(db: Session, mes: int, ano: int):
-    uuid_geracao = str(uuid.uuid4())  # 👈 id único da geração
+    uuid_geracao = str(uuid.uuid4())
 
-    escalas = (
+    # esse trem é o coração para a geração do historico
+    # aqui diferencia os escalaDia que já foram gerados dos que nao foram
+    # evitando assim incluir dias que são de outros lotes que já foram gerados
+    # a escala para retornar SOMENTE os que ainda estão em 'branco'
+    configuracoes_base = (
         db.query(EscalaDia)
         .filter(
-            func.month(EscalaDia.data_esd) == mes, func.year(EscalaDia.data_esd) == ano
+            EscalaDia.lote_escala_esd.is_(None),
+            func.month(EscalaDia.data_esd) == mes,
+            func.year(EscalaDia.data_esd) == ano,
         )
         .all()
     )
@@ -44,8 +50,25 @@ def gerar_escala_mes(db: Session, mes: int, ano: int):
         "lote": uuid_geracao,
     }
 
-    for escala in escalas:
-        gerar_escala_dia(db, escala, controle_mes)
+    for cfg in configuracoes_base:
+        cfg.lote_escala_esd = uuid_geracao
+        db.flush()
+
+        funcoes = (
+            db.query(EscalaDiaFuncao)
+            .filter(EscalaDiaFuncao.id_esd_fk == cfg.id_esd)
+            .all()
+        )
+
+        for f in funcoes:
+            nova_funcao = EscalaDiaFuncao(
+                id_esd_fk=cfg.id_esd,
+                id_fun_fk=f.id_fun_fk,
+                quantidade=f.quantidade,
+            )
+            db.add(nova_funcao)
+
+        gerar_escala_dia(db, cfg, controle_mes)
 
     db.commit()
 

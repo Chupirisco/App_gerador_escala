@@ -7,6 +7,7 @@ from app.models.escala_resultado import EscalaResultado
 from app.models.escala_dia import EscalaDia
 from app.models.funcao import Funcao
 from app.models.individuo import Individuo
+from app.models.local import Local
 from app.schemas.escala_resultado import EscalaResultadoCreate, EscalaResultadoResponse
 
 
@@ -15,16 +16,16 @@ router = APIRouter(prefix="/escala-resultado", tags=["Escala Resultado"])
 
 # mostra todas as gerações(lotes)
 @router.get("/lotes")
+@router.get("/lotes")
 def listar_lotes(db: Session = Depends(get_db)):
     lotes = (
         db.query(
-            EscalaResultado.lote_escala_esr.label("lote"),
+            EscalaDia.lote_escala_esd.label("lote"),
             func.year(EscalaDia.data_esd).label("ano"),
             func.month(EscalaDia.data_esd).label("mes"),
         )
-        .join(EscalaDia)
         .group_by(
-            EscalaResultado.lote_escala_esr,
+            EscalaDia.lote_escala_esd,
             func.year(EscalaDia.data_esd),
             func.month(EscalaDia.data_esd),
         )
@@ -39,36 +40,73 @@ def listar_lotes(db: Session = Depends(get_db)):
 
 
 # get que mostra as escalas de uma determinada geração(lote)
-@router.get("/lote/{lote_escala}/dias")
-def listar_dias_do_lote(lote_escala: str, db: Session = Depends(get_db)):
+@router.get("/lote/{lote}")
+def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
 
-    dias = (
+    registros = (
         db.query(
-            func.min(EscalaDia.id_esd).label("id_esd"),
-            EscalaDia.data_esd.label("data"),
+            EscalaResultado.id_esr,
+            EscalaDia.id_esd,
+            EscalaDia.data_esd,
+            EscalaDia.horario_esd,
+            Local.nome_loc,
+            Funcao.nome_fun,
+            Funcao.nivel_fun,
+            Individuo.nome_ind,
+            Individuo.nivel_ind,
+            Individuo.status_ind,
         )
-        .join(EscalaResultado, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
-        .filter(EscalaResultado.lote_escala_esr == lote_escala)
-        .group_by(EscalaDia.data_esd)
-        .order_by(EscalaDia.data_esd)
+        .join(EscalaDia, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
+        .join(Local, EscalaDia.id_loc_fk == Local.id_loc)
+        .join(Funcao, EscalaResultado.id_fun_fk == Funcao.id_fun)
+        .outerjoin(Individuo, EscalaResultado.id_ind_fk == Individuo.id_ind)
+        .filter(EscalaDia.lote_escala_esd == lote)
+        .order_by(EscalaDia.data_esd, EscalaDia.horario_esd)
         .all()
     )
 
-    return [{"id_esd": d.id_esd, "data": d.data} for d in dias]
+    if not registros:
+        raise HTTPException(status_code=404, detail="Lote não encontrado")
+
+    return [
+        {
+            "id_esr": r.id_esr,
+            "id_esd": r.id_esd,
+            "data": r.data_esd,
+            "horario": r.horario_esd,
+            "local": r.nome_loc,
+            "funcao": r.nome_fun,
+            "nivel_funcao": r.nivel_fun,
+            "pessoa": (
+                {
+                    "nome": r.nome_ind,
+                    "nivel": r.nivel_ind,
+                    "status": r.status_ind,
+                }
+                if r.nome_ind
+                else None
+            ),
+        }
+        for r in registros
+    ]
 
 
 # get filtrado para mostrar o resultado de uma geração
-@router.get("/lote/{lote_escala}/dia/{id_esd}")
-def listar_detalhes_dia(lote_escala: str, id_esd: int, db: Session = Depends(get_db)):
+@router.get("/lote/{lote}/dia/{id_esd}")
+def listar_detalhes_dia(lote: str, id_esd: int, db: Session = Depends(get_db)):
 
     resultados = (
         db.query(EscalaResultado)
+        .join(EscalaDia)
         .filter(
-            EscalaResultado.lote_escala_esr == lote_escala,
+            EscalaDia.lote_escala_esd == lote,
             EscalaResultado.id_esd_fk == id_esd,
         )
         .all()
     )
+
+    if not resultados:
+        raise HTTPException(status_code=404, detail="Dia não encontrado")
 
     return [
         {
@@ -96,20 +134,14 @@ def deletar_resultado(id: int, db: Session = Depends(get_db)):
 @router.delete("/lotes/{lote}")
 def deletar_lote(lote: str, db: Session = Depends(get_db)):
 
-    subquery = (
-        db.query(EscalaResultado.id_esd_fk)
-        .filter(EscalaResultado.lote_escala_esr == lote)
-        .subquery()
-    )
-
     total = (
         db.query(EscalaDia)
-        .filter(EscalaDia.id_esd.in_(subquery))
+        .filter(EscalaDia.lote_escala_esd == lote)
         .delete(synchronize_session=False)
     )
 
     if total == 0:
-        raise HTTPException(status_code=404, detail="Resultado não encontrado")
+        raise HTTPException(status_code=404, detail="Lote não encontrado")
 
     db.commit()
     return {"msg": "Sucesso"}
