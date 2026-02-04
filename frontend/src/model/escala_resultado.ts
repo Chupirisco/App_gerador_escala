@@ -4,13 +4,12 @@ export interface HistoricoResultado {
   individuo: string | null;
 }
 
-export interface HistoricoEscala {
+export interface HistoricoLoteSelecionado {
+  id_esr: number;
   id_esd: number;
   data: string;
   horario: string;
-  local: string | null;
-  id_loc: number;
-  resultados: HistoricoResultado[];
+  local: string;
 }
 
 export interface HistoricoLote {

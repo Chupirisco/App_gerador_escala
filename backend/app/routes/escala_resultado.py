@@ -50,16 +50,9 @@ def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
             EscalaDia.data_esd,
             EscalaDia.horario_esd,
             Local.nome_loc,
-            Funcao.nome_fun,
-            Funcao.nivel_fun,
-            Individuo.nome_ind,
-            Individuo.nivel_ind,
-            Individuo.status_ind,
         )
         .join(EscalaDia, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
         .join(Local, EscalaDia.id_loc_fk == Local.id_loc)
-        .join(Funcao, EscalaResultado.id_fun_fk == Funcao.id_fun)
-        .outerjoin(Individuo, EscalaResultado.id_ind_fk == Individuo.id_ind)
         .filter(EscalaDia.lote_escala_esd == lote)
         .order_by(EscalaDia.data_esd, EscalaDia.horario_esd)
         .all()
@@ -72,20 +65,9 @@ def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
         {
             "id_esr": r.id_esr,
             "id_esd": r.id_esd,
-            "data": r.data_esd,
+            "data": r.data_esd.strftime("%d/%m/%Y"),
             "horario": r.horario_esd,
             "local": r.nome_loc,
-            "funcao": r.nome_fun,
-            "nivel_funcao": r.nivel_fun,
-            "pessoa": (
-                {
-                    "nome": r.nome_ind,
-                    "nivel": r.nivel_ind,
-                    "status": r.status_ind,
-                }
-                if r.nome_ind
-                else None
-            ),
         }
         for r in registros
     ]
@@ -120,15 +102,25 @@ def listar_detalhes_dia(lote: str, id_esd: int, db: Session = Depends(get_db)):
 
 @router.delete("/{id}")
 def deletar_resultado(id: int, db: Session = Depends(get_db)):
-    res = db.query(EscalaResultado).filter(EscalaResultado.id_esr == id).first()
 
-    if not res:
+    resultado = db.query(EscalaResultado).filter(EscalaResultado.id_esr == id).first()
+
+    if not resultado:
         raise HTTPException(status_code=404, detail="Resultado não encontrado")
 
-    db.delete(res)
+    id_esd = resultado.id_esd_fk  # 👈 pega o dia da escala vinculado
+
+    escala_dia = db.query(EscalaDia).filter(EscalaDia.id_esd == id_esd).first()
+
+    if not escala_dia:
+        raise HTTPException(status_code=404, detail="EscalaDia não encontrado")
+
+    # deletando o EscalaDia, o cascade remove:
+    # escala_resultado e escala_dia_funcao
+    db.delete(escala_dia)
     db.commit()
 
-    return {"msg": "Sucesso"}
+    return {"msg": "Escala e resultados excluídos com sucesso"}
 
 
 @router.delete("/lotes/{lote}")
