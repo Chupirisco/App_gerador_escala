@@ -73,7 +73,6 @@ export default function Page() {
       setNotTipo("sucesso");
       setNot(true);
     } catch (err) {
-      alert("Erro ao excluir a escala");
       setNotMenssagem("Falha ao excluir!");
       setNotTipo("erro");
       setNot(true);
