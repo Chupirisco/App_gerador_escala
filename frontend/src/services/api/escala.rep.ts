@@ -3,6 +3,7 @@ import { api } from "./api";
 import {
   HistoricoLote,
   HistoricoLoteSelecionado,
+  HistoricoResultado,
 } from "@/model/escala_resultado";
 
 export const cadastrarDias = async (
@@ -69,4 +70,14 @@ export const detelarEscalaId = async (id: number) => {
   return await api.delete(`/escala-resultado/${id}`).then((res) => {
     return res.data.msg;
   });
+};
+
+export const buscarPorLoteEId = async (lote: string, id: number) => {
+  const res = await api.get(`/escala-resultado/lote/${lote}/dia/${id}`);
+  return {
+    data: res.data.data,
+    local: res.data.local,
+    horario: res.data.horario,
+    resultado: res.data.resultados,
+  };
 };

@@ -128,6 +128,11 @@ export default function Page() {
             <div
               className="card h-100 shadow-sm border-0 escala-card"
               role="button"
+              onClick={() =>
+                router.push(
+                  `/escala/historico/lote_selecionado/${lote}/dia_selecionado/${escala.id_esd}`,
+                )
+              }
             >
               <div className="card-body d-flex flex-column justify-content-between">
                 {/* Cabeçalho */}

@@ -45,15 +45,15 @@ def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
 
     registros = (
         db.query(
-            EscalaResultado.id_esr,
             EscalaDia.id_esd,
             EscalaDia.data_esd,
             EscalaDia.horario_esd,
             Local.nome_loc,
         )
-        .join(EscalaDia, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
+        .join(EscalaResultado, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
         .join(Local, EscalaDia.id_loc_fk == Local.id_loc)
         .filter(EscalaDia.lote_escala_esd == lote)
+        .distinct(EscalaDia.id_esd)
         .order_by(EscalaDia.data_esd, EscalaDia.horario_esd)
         .all()
     )
@@ -63,7 +63,6 @@ def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
 
     return [
         {
-            "id_esr": r.id_esr,
             "id_esd": r.id_esd,
             "data": r.data_esd.strftime("%d/%m/%Y"),
             "horario": r.horario_esd,
@@ -73,13 +72,15 @@ def get_escalas_por_lote(lote: str, db: Session = Depends(get_db)):
     ]
 
 
-# get filtrado para mostrar o resultado de uma geração
 @router.get("/lote/{lote}/dia/{id_esd}")
 def listar_detalhes_dia(lote: str, id_esd: int, db: Session = Depends(get_db)):
 
     resultados = (
         db.query(EscalaResultado)
-        .join(EscalaDia)
+        .join(EscalaDia, EscalaResultado.id_esd_fk == EscalaDia.id_esd)
+        .join(Local, EscalaDia.id_loc_fk == Local.id_loc)
+        .join(Funcao, EscalaResultado.id_fun_fk == Funcao.id_fun)
+        .outerjoin(Individuo, EscalaResultado.id_ind_fk == Individuo.id_ind)
         .filter(
             EscalaDia.lote_escala_esd == lote,
             EscalaResultado.id_esd_fk == id_esd,
@@ -90,14 +91,22 @@ def listar_detalhes_dia(lote: str, id_esd: int, db: Session = Depends(get_db)):
     if not resultados:
         raise HTTPException(status_code=404, detail="Dia não encontrado")
 
-    return [
-        {
-            "funcao": r.funcao.nome_fun,
-            "individuo": r.individuo.nome_ind if r.individuo else None,
-            "horario": r.escala_dia.horario_esd.strftime("%H:%M"),
-        }
-        for r in resultados
-    ]
+    # pega o escala_dia a partir do primeiro resultado
+    escala_dia = resultados[0].escala_dia
+
+    return {
+        "id_esd": escala_dia.id_esd,
+        "data": escala_dia.data_esd.strftime("%d/%m/%Y"),
+        "horario": escala_dia.horario_esd.strftime("%H:%M"),
+        "local": escala_dia.local.nome_loc,
+        "resultados": [
+            {
+                "funcao": r.funcao.nome_fun,
+                "individuo": r.individuo.nome_ind if r.individuo else None,
+            }
+            for r in resultados
+        ],
+    }
 
 
 @router.delete("/{id}")

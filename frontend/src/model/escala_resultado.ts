@@ -1,8 +1,14 @@
 export interface HistoricoResultado {
-  id_esr: number;
-  funcao: string;
-  individuo: string | null;
+  data: string;
+  local: string;
+  horario: string;
+  resultado: resultado[];
 }
+// isso é pra ser usado no historico resultado pois vem desse jeito da api
+type resultado = {
+  funcao: string;
+  individuo: string;
+};
 
 export interface HistoricoLoteSelecionado {
   id_esr: number;
