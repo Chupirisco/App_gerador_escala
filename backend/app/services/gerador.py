@@ -48,6 +48,7 @@ def gerar_escala_mes(db: Session, mes: int, ano: int):
         "escalados": set(),
         "contagem": defaultdict(int),
         "lote": uuid_geracao,
+        "escalados_por_data": defaultdict(set),  # 👈 NOVO
     }
 
     for cfg in configuracoes_base:
@@ -84,13 +85,17 @@ def gerar_escala_dia(db: Session, escala: EscalaDia, controle_mes: dict):
         .all()
     )
 
-    escalados_hoje = set()
+    escalados_hoje = controle_mes["escalados_por_data"][escala.data_esd]
 
     for cfg in configuracoes:
         for _ in range(cfg.quantidade):
             candidato = escolher_individuo(
                 db, cfg, data_atual, data_anterior, escalados_hoje, controle_mes
             )
+
+            # 🚨 GARANTIA ABSOLUTA: nunca repetir no mesmo dia
+            if candidato and candidato.id_ind in escalados_hoje:
+                candidato = None
 
             resultado = EscalaResultado(
                 id_esd_fk=escala.id_esd,
