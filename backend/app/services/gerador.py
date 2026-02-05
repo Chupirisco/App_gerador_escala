@@ -151,16 +151,7 @@ def escolher_individuo(
             continue
 
         # trabalhou ontem (regra absoluta)
-        if (
-            db.query(EscalaResultado)
-            .join(EscalaDia)
-            .filter(
-                EscalaResultado.id_ind_fk == ind.id_ind,
-                EscalaDia.data_esd == data_anterior,
-                EscalaResultado.lote_escala_esr == controle_mes["lote"],
-            )
-            .first()
-        ):
+        if ind.id_ind in controle_mes["escalados_por_data"].get(data_anterior, set()):
             continue
 
         # prioridade de nível (quanto menor, melhor)
