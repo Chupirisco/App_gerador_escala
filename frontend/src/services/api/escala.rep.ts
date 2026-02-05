@@ -1,6 +1,10 @@
 import { EscalaDia } from "@/model/escala_dia_config.model";
 import { api } from "./api";
-import { HistoricoLote } from "@/model/escala_resultado";
+import {
+  HistoricoLote,
+  HistoricoLoteSelecionado,
+  HistoricoResultado,
+} from "@/model/escala_resultado";
 
 export const cadastrarDias = async (
   escalas: EscalaDia[],
@@ -8,6 +12,7 @@ export const cadastrarDias = async (
   mes: number,
 ) => {
   for (const escala of escalas) {
+    console.log(escala.id);
     const data = new Date(ano, mes - 1, escala.dia);
 
     const payload = {
@@ -34,6 +39,7 @@ export const criarEscala = async (mes: number, ano: number) => {
   });
 };
 
+// historico
 export const buscarTodasEscalas = async () => {
   const res = await api.get("/escala-resultado/lotes");
   return res.data.map((res: HistoricoLote) => ({
@@ -47,4 +53,31 @@ export const detelarEscalaLote = async (lote: string) => {
   return await api.delete(`/escala-resultado/lotes/${lote}`).then((res) => {
     return res.data.msg;
   });
+};
+
+export const buscarEscalasLoteSelecionado = async (lote: string) => {
+  const res = await api.get(`/escala-resultado/lote/${lote}`);
+  return res.data.map((res: HistoricoLoteSelecionado) => ({
+    id_esr: res.id_esr,
+    id_esd: res.id_esd,
+    data: res.data,
+    horario: res.horario,
+    local: res.local.replace("-", "/"),
+  }));
+};
+
+export const detelarEscalaId = async (id: number) => {
+  return await api.delete(`/escala-resultado/${id}`).then((res) => {
+    return res.data.msg;
+  });
+};
+
+export const buscarPorLoteEId = async (lote: string, id: number) => {
+  const res = await api.get(`/escala-resultado/lote/${lote}/dia/${id}`);
+  return {
+    data: res.data.data,
+    local: res.data.local,
+    horario: res.data.horario,
+    resultado: res.data.resultados,
+  };
 };

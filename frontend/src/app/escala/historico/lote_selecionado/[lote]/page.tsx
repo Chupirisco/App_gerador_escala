@@ -1,24 +1,23 @@
 "use client";
 import ModalConfirmacao from "@/components/ModalConfirmacao";
 import Notificacao from "@/components/Notificacao";
-import { HistoricoLote } from "@/model/escala_resultado";
-import { Localidade } from "@/model/localidade.model";
+import { HistoricoLoteSelecionado } from "@/model/escala_resultado";
 import {
-  buscarTodasEscalas,
+  buscarEscalasLoteSelecionado,
+  detelarEscalaId,
   detelarEscalaLote,
 } from "@/services/api/escala.rep";
-import { listarLocalidade } from "@/services/api/localidade.rep";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
-
+  const { lote } = useParams();
   //filtro
-  const [resultados, setResultados] = useState<HistoricoLote[]>([]);
+  const [resultados, setResultados] = useState<HistoricoLoteSelecionado[]>([]);
   const [resultadosFiltrados, setResultadosFiltrados] = useState<
-    HistoricoLote[]
+    HistoricoLoteSelecionado[]
   >([]);
   const [filtroMes, setFiltroMes] = useState<number | null>(null);
   const [filtroAno, setFiltroAno] = useState<number | null>(null);
@@ -32,10 +31,10 @@ export default function Page() {
   const [notTipo, setNotTipo] = useState("");
 
   //excluir e abrir
-  const [lote, setLote] = useState("");
+  const [id, setId] = useState<number | null>();
 
   useEffect(() => {
-    buscarTodasEscalas().then((res) => {
+    buscarEscalasLoteSelecionado(lote!.toString()).then((res) => {
       setResultados(res);
       setResultadosFiltrados(res);
     });
@@ -46,18 +45,19 @@ export default function Page() {
 
     let filtrado = [...resultados];
 
-    filtrado = filtrado.filter((escala) => {
-      if (escala.ano !== filtroAno && filtroAno !== null) return false;
-      if (escala.mes !== filtroMes && filtroMes !== null) return false;
-      return true;
-    });
+    // filtrado = filtrado.filter((escala) => {
+    //   if (escala.ano !== filtroAno && filtroAno !== null) return false;
+    //   if (escala.mes !== filtroMes && filtroMes !== null) return false;
+    //   return true;
+    // });
 
     setResultadosFiltrados(filtrado);
   };
 
   const excluir = async () => {
     try {
-      const res = await detelarEscalaLote(lote);
+      if (id === null) return;
+      const res = await detelarEscalaId(id!);
       if (res !== "Sucesso") {
         setNotMenssagem("Falha ao excluir!");
         setNotTipo("erro");
@@ -65,9 +65,9 @@ export default function Page() {
         return;
       }
 
-      setResultados((prev) => prev.filter((escala) => escala.lote !== lote));
+      setResultados((prev) => prev.filter((escala) => escala.id_esr !== id));
       setResultadosFiltrados((prev) =>
-        prev.filter((escala) => escala.lote !== lote),
+        prev.filter((escala) => escala.id_esr !== id),
       );
       setNotMenssagem("Operação realizado com sucesso!");
       setNotTipo("sucesso");
@@ -122,14 +122,16 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="row g-3 w-75">
+      <div className="row g-4 w-75">
         {resultadosFiltrados.map((escala, index) => (
           <div key={index} className="col-md-4">
             <div
               className="card h-100 shadow-sm border-0 escala-card"
               role="button"
               onClick={() =>
-                router.push(`/escala/historico/lote_selecionado/${escala.lote}`)
+                router.push(
+                  `/escala/historico/lote_selecionado/${lote}/dia_selecionado/${escala.id_esd}`,
+                )
               }
             >
               <div className="card-body d-flex flex-column justify-content-between">
@@ -137,11 +139,10 @@ export default function Page() {
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <div>
                     <h6 className="fw-bold text-primary mb-1">
-                      Lote N°{index + 1}
+                      {escala.local}
                     </h6>
                     <small className="text-muted">
-                      {escala.mes < 10 ? `0${escala.mes}` : escala.mes}/
-                      {escala.ano}
+                      {escala.data} • {escala.horario}
                     </small>
                   </div>
 
@@ -150,10 +151,10 @@ export default function Page() {
                     className="btn btn-sm btn-danger"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setLote(escala.lote);
+                      setId(escala.id_esr);
                       setModalConf(true);
                     }}
-                    title="Excluir lote"
+                    title="Excluir escala"
                   >
                     <i className="bi bi-trash-fill text-white"></i>
                   </button>
